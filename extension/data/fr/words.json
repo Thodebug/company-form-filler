@@ -1,0 +1,133 @@
+{
+ "patterns": {
+  "default": [
+   "{TRADE} {NAME}",
+   "{NAME} {TRADE}",
+   "{INITIALS} {TRADE}",
+   "{TRADE} {PLACE}"
+  ],
+  "building": [
+   "{TRADE} {NAME}",
+   "{NAME} {TRADE}",
+   "{NAME} ET FILS",
+   "{INITIALS} {TRADE}",
+   "{TRADE} {PLACE}",
+   "{NAME} BATIMENT"
+  ],
+  "food": [
+   "{TRADE} {NAME}",
+   "{TRADE} {PLACE}",
+   "{TRADE} DU {AREA}",
+   "{NAME} {TRADE}"
+  ],
+  "retail": [
+   "{TRADE} {NAME}",
+   "{TRADE} {PLACE}",
+   "{NAME} {TRADE}",
+   "{TRADE} DU {AREA}"
+  ],
+  "hospitality": [
+   "{TRADE} {NAME}",
+   "{TRADE} {PLACE}",
+   "{TRADE} DU {AREA}",
+   "{NAME} {TRADE}"
+  ],
+  "digital": [
+   "{NAME} {TRADE}",
+   "{INITIALS} {TRADE}",
+   "{TECH}",
+   "{TECH} {TRADE}"
+  ],
+  "consulting": [
+   "{NAME} {TRADE}",
+   "{INITIALS} {TRADE}",
+   "{NAME} ASSOCIES",
+   "{TECH} {TRADE}",
+   "CABINET {NAME}"
+  ],
+  "property": [
+   "{NAME} {TRADE}",
+   "{TRADE} {NAME}",
+   "{TRADE} {PLACE}"
+  ],
+  "health": [
+   "{TRADE} {NAME}",
+   "{TRADE} {PLACE}"
+  ],
+  "transport": [
+   "{TRADE} {NAME}",
+   "{NAME} {TRADE}",
+   "{INITIALS} {TRADE}",
+   "{TRADE} {PLACE}"
+  ],
+  "industry": [
+   "{NAME} {TRADE}",
+   "{TRADE} {NAME}",
+   "{INITIALS} {TRADE}",
+   "{TRADE} {PLACE}",
+   "{NAME} INDUSTRIE"
+  ]
+ },
+ "places": [
+  "DU CENTRE",
+  "DE L'OUEST",
+  "DU NORD",
+  "DU SUD",
+  "DE L'EST",
+  "DES HALLES",
+  "DU PORT",
+  "DES REMPARTS",
+  "DU MARCHE",
+  "DE LA PLACE",
+  "DU VAL",
+  "DES COLLINES"
+ ],
+ "areas": [
+  "CENTRE",
+  "VILLAGE",
+  "QUARTIER",
+  "MARCHE",
+  "PORT",
+  "VAL",
+  "PLATEAU",
+  "BOURG"
+ ],
+ "tech": [
+  "NEXALIS",
+  "DATAVIA",
+  "LOGIKEA",
+  "OPTIMEA",
+  "VERTIKO",
+  "SYNAPSO",
+  "KORAVIA",
+  "ALTIVEO",
+  "NUMERYS",
+  "CLARIVO",
+  "PROXIMEA",
+  "QUALINEO"
+ ],
+ "forbidden": [
+  "BANQUE",
+  "BANK",
+  "ASSURANCE",
+  "MUTUELLE",
+  "NOTAIRE",
+  "AVOCAT",
+  "HUISSIER",
+  "PHARMACIE",
+  "CREDIT",
+  "EPARGNE",
+  "UNIVERSITE",
+  "MINISTERE",
+  "ETAT",
+  "NATIONAL",
+  "OFFICIEL",
+  "GOOGLE",
+  "AMAZON",
+  "APPLE",
+  "MICROSOFT",
+  "CARREFOUR",
+  "LECLERC",
+  "AUCHAN"
+ ]
+}

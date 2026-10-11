@@ -30,7 +30,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@etalab/decoupage-administratif": "6.0.0",
     "@resvg/resvg-js": "^2.6.2",
+    "@socialgouv/codes-naf": "1.1.1",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",
     "jsdom": "^27.4.0",

@@ -1,0 +1,8 @@
+[
+ { "name": "Banque Fictive du Centre", "bankCode": "99101", "bic": "ZFBCFRPP" },
+ { "name": "Crédit Imaginaire de l'Ouest", "bankCode": "99102", "bic": "ZCIOFRPP" },
+ { "name": "Caisse Fictive des Artisans", "bankCode": "99103", "bic": "ZCFAFRPP" },
+ { "name": "Banque Exemple du Sud", "bankCode": "99104", "bic": "ZBESFRPP" },
+ { "name": "Société Bancaire de Test", "bankCode": "99105", "bic": "ZSBTFRPP" },
+ { "name": "Banque Démonstration du Nord", "bankCode": "99106", "bic": "ZBDNFRPP" }
+]
