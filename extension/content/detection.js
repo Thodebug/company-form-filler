@@ -15,6 +15,8 @@ const CffDetection = (() => {
   ]);
 
   const WEIGHT_STRONG = 3;
+  /** The visible label outweighs identifiers such as id="name". */
+  const WEIGHT_LABEL = 4;
   const WEIGHT_WEAK = 2;
   const WEIGHT_TOKEN = 3;
   const BONUS_LENGTH = 2;
@@ -34,14 +36,9 @@ const CffDetection = (() => {
   const MAX_SHADOW_DEPTH = 16;
   const MAX_COMPANION_FORMS = 10;
 
-  const STRONG_ATTRIBUTES = [
-    'id',
-    'name',
-    'formcontrolname',
-    'ng-reflect-name',
-    'aria-label',
-    'placeholder',
-  ];
+  /** Several identifiers of one field ("t-name", "name") are a single clue. */
+  const IDENTIFIER_ATTRIBUTES = ['id', 'name', 'formcontrolname', 'ng-reflect-name'];
+  const STRONG_ATTRIBUTES = ['aria-label', 'placeholder'];
   const WEAK_ATTRIBUTES = ['class', 'title'];
   const ANCESTOR_ATTRIBUTES = [
     'id',
@@ -258,7 +255,7 @@ const CffDetection = (() => {
   }
 
   /**
-   * @typedef {{ text: string, weight: number, placeholder?: boolean }} Source
+   * @typedef {{ text: string, weight: number, placeholder: boolean, identifier: boolean }} Source
    */
 
   /**
@@ -275,18 +272,19 @@ const CffDetection = (() => {
      * @param {boolean} [placeholder] An example value ("nom@exemple.fr") says
      *   nothing about whose value the field holds.
      */
-    const add = (text, weight, placeholder = false) => {
+    const add = (text, weight, placeholder = false, identifier = false) => {
       if (!text || !text.trim()) {
         return;
       }
       const normalized = normalize(text);
-      // id, name and formcontrolname often repeat one word: it counts once.
+      // A label repeated as neighbour text, or an id equal to the name, counts once.
       const same = sources.find((source) => source.text === normalized);
       if (same) {
         same.weight = Math.max(same.weight, weight);
         same.placeholder &&= placeholder;
+        same.identifier &&= identifier;
       } else {
-        sources.push({ text: normalized, weight, placeholder });
+        sources.push({ text: normalized, weight, placeholder, identifier });
       }
     };
     /**
@@ -301,6 +299,9 @@ const CffDetection = (() => {
       }
     };
 
+    for (const name of IDENTIFIER_ATTRIBUTES) {
+      add(field.getAttribute(name), WEIGHT_STRONG, false, true);
+    }
     for (const name of STRONG_ATTRIBUTES) {
       add(field.getAttribute(name), WEIGHT_STRONG, name === 'placeholder');
     }
@@ -310,13 +311,13 @@ const CffDetection = (() => {
     addDataAttributes(field, WEIGHT_WEAK);
 
     for (const label of Array.from(field.labels || [])) {
-      add(textOf(label), WEIGHT_STRONG);
+      add(textOf(label), WEIGHT_LABEL);
     }
     for (const name of ['aria-labelledby', 'aria-describedby']) {
       for (const id of (field.getAttribute(name) || '').split(/\s+/).filter(Boolean)) {
         const referenced = findById(field, id);
         if (referenced) {
-          add(textOf(referenced), WEIGHT_STRONG);
+          add(textOf(referenced), WEIGHT_LABEL);
         }
       }
     }
@@ -332,7 +333,7 @@ const CffDetection = (() => {
         if (text) {
           add(
             text.slice(0, NEIGHBOR_TEXT_LIMIT),
-            text.length <= LABEL_LIKE_TEXT_LIMIT ? WEIGHT_STRONG : WEIGHT_WEAK,
+            text.length <= LABEL_LIKE_TEXT_LIMIT ? WEIGHT_LABEL : WEIGHT_WEAK,
           );
           neighborTextTaken = true;
         }
@@ -638,13 +639,19 @@ const CffDetection = (() => {
         return;
       }
       let score = 0;
+      let identifierScore = 0;
       let evidence = false;
       sources.forEach((source, index) => {
         if (mentions[index].always.has(order) || (inBlock && mentions[index].inBlock.has(order))) {
-          score += source.weight;
+          if (source.identifier) {
+            identifierScore = Math.max(identifierScore, source.weight);
+          } else {
+            score += source.weight;
+          }
           evidence = true;
         }
       });
+      score += identifierScore;
       if ((definition.autocomplete || []).some((token) => autocomplete.includes(token))) {
         score += WEIGHT_TOKEN;
         evidence = true;
