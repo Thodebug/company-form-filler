@@ -1,13 +1,11 @@
-// Minimal typings for the WebExtension APIs the extension uses, and for the
-// messages exchanged between its parts. Only what the code uses is declared.
+// Only the parts of the WebExtension APIs the code uses are declared.
 
 /** What the content script reports about the right-clicked control. */
 interface CffVerdict {
-  /** Recognized company or address type of the control itself. */
+  /** Detected type of the control itself. */
   field: string | null;
-  /** Qualification of the block around the control. */
+  /** Kind of form block around the control. */
   block: 'company' | 'address' | null;
-  /** Whether the frame can undo its last fill. */
   canUndo: boolean;
 }
 
@@ -23,7 +21,7 @@ interface CffFavorite {
 
 type CffTheme = 'system' | 'light' | 'dark';
 
-/** Persistent state (storage.local). */
+/** Kept in storage.local. */
 interface CffStoredState {
   schemaVersion: 1;
   last: Company | null;
@@ -34,13 +32,12 @@ interface CffStoredState {
   onboardingDismissed: boolean;
 }
 
-/** What the popup and the viewer receive. */
 interface CffViewState extends CffStoredState {
-  /** Company of the tab the popup was opened on, or of the viewer's target tab. */
+  /** Company of the popup's tab, or of the viewer's target tab. */
   tabCompany: Company | null;
   /** The popup was opened in a private window. */
   incognito: boolean;
-  /** Persistent storage failed: the state lives in memory only. */
+  /** storage.local failed: the state lives in memory only. */
   storageError: boolean;
 }
 
@@ -82,6 +79,8 @@ interface CffTab {
   windowId?: number;
   incognito?: boolean;
   active?: boolean;
+  url?: string;
+  lastAccessed?: number;
 }
 
 interface CffWindow {
@@ -124,8 +123,6 @@ interface CffExtensionApi {
     update(tabId: number, properties: { active?: boolean }): Promise<CffTab>;
     get(tabId: number): Promise<CffTab>;
     getCurrent(): Promise<CffTab | undefined>;
-    onActivated: CffEvent<(info: { tabId: number; windowId: number }) => void>;
-    onRemoved: CffEvent<(tabId: number) => void>;
   };
   windows?: {
     update(windowId: number, properties: { focused?: boolean }): Promise<unknown>;

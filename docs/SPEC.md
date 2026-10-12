@@ -1,11 +1,6 @@
 # Spécification v2 : Company Form Filler
 
-Version finale, validée avant développement après deux audits indépendants, puis mise à jour
-des ajustements faits pendant celui-ci (signalés « ajusté »). Elle remplace la spécification v1.
-
-Les décisions marquées **[tech]** ont été tranchées par l'équipe de développement sans
-question au commanditaire. Elles n'ont pas d'effet produit visible ou suivent une
-recommandation validée. Elles peuvent être revues avant le début du code, pas après.
+Comportement attendu de la version 2. Remplace la spécification de la v1.
 
 ---
 
@@ -32,7 +27,7 @@ recommandation validée. Elles peuvent être revues avant le début du code, pas
   - détection des champs avec un vocabulaire **français et anglais** ;
   - code, commentaires et commits en anglais.
 - **Pays** : la France seule est livrée. Données et vocabulaire sont rangés par pays
-  (`data/fr/`, `vocab/fr.js`). **[tech]** Aucune interface « module pays » n'est formalisée.
+  (`data/fr/`, `vocab/fr.js`). Aucune interface « module pays » n'est formalisée.
 - **Principe** : données entièrement fictives mais cohérentes, tirées en local.
   **Aucune requête réseau** émise par l'extension.
 
@@ -42,22 +37,22 @@ recommandation validée. Elles peuvent être revues avant le début du code, pas
 
 ### 2.1 Modèle
 
-**[tech]** L'objet `Company` est structuré par groupes et porte :
+L'objet `Company` est structuré par groupes et porte :
 
 - `schemaVersion: 1` ;
 - un `id` technique (UUID v4 construit avec `crypto.getRandomValues`, distinct de l'UUID ERP) ;
 - `createdAt` (ISO 8601).
 
-| Groupe       | Clés                                                                                                                                                                                                                                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`   | `legalName`, `legalNameShort`, `tradeName`, `legalForm` {code INSEE, abrégé, libellé}, `siren`, `nic`, `siret`, `creationDate`, `rcs`                                                                                                                                                    |
-| `tax`        | `vatNumber`, `nafCode` (rév. 2.1), `nafLabel`, `nafCodeRev2`, `nafLabelRev2`, `shareCapital` (euros entiers ou `null` pour une EI), `headcountBand` {code INSEE, libellé}, `vatRegime`, `vatCode`                                                                                        |
-| `address`    | `streetNumber`, `streetNumberSuffix`, `streetType`, `streetTypeShort`, `streetName`, `line1`, `line1Short` (ajusté : type de voie abrégé), `line2`, `postalCode`, `city`, `inseeCode`, `departmentCode`, `departmentName`, `region`, `country` (`FR`, `France`), `latitude`, `longitude` |
-| `contact`    | `phone` (fixe société), `email`, `website`                                                                                                                                                                                                                                               |
-| `manager`    | `title` (M., Mme), `firstName`, `lastName`, `role`, `mobile`, `email`                                                                                                                                                                                                                    |
-| `bank`       | `bankName`, `bankCode`, `branchCode`, `accountNumber`, `ribKey`, `iban`, `bic`                                                                                                                                                                                                           |
-| `accounting` | `customerCode`, `supplierCode`, `customerAccount`, `supplierAccount`, `auxiliaryAccount`, `paymentMethod`, `paymentTerms`, `currency`, `creditLimit`                                                                                                                                     |
-| `erp`        | `erpCompanyCode`, `erpSiteCode`, `gln`, `internalRef`, `uuid`                                                                                                                                                                                                                            |
+| Groupe       | Clés                                                                                                                                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`   | `legalName`, `legalNameShort`, `tradeName`, `legalForm` {code INSEE, abrégé, libellé}, `siren`, `nic`, `siret`, `creationDate`, `rcs`                                                                                                                                           |
+| `tax`        | `vatNumber`, `nafCode` (rév. 2.1), `nafLabel`, `nafCodeRev2`, `nafLabelRev2`, `shareCapital` (euros entiers ou `null` pour une EI), `headcountBand` {code INSEE, libellé}, `vatRegime`, `vatCode`                                                                               |
+| `address`    | `streetNumber`, `streetNumberSuffix`, `streetType`, `streetTypeShort`, `streetName`, `line1`, `line1Short` (type de voie abrégé), `line2`, `postalCode`, `city`, `inseeCode`, `departmentCode`, `departmentName`, `region`, `country` (`FR`, `France`), `latitude`, `longitude` |
+| `contact`    | `phone` (fixe société), `email`, `website`                                                                                                                                                                                                                                      |
+| `manager`    | `title` (M., Mme), `firstName`, `lastName`, `role`, `mobile`, `email`                                                                                                                                                                                                           |
+| `bank`       | `bankName`, `bankCode`, `branchCode`, `accountNumber`, `ribKey`, `iban`, `bic`                                                                                                                                                                                                  |
+| `accounting` | `customerCode`, `supplierCode`, `customerAccount`, `supplierAccount`, `auxiliaryAccount`, `paymentMethod`, `paymentTerms`, `currency`, `creditLimit`                                                                                                                            |
+| `erp`        | `erpCompanyCode`, `erpSiteCode`, `gln`, `internalRef`, `uuid`                                                                                                                                                                                                                   |
 
 **Valeurs vides autorisées** : `streetNumberSuffix` et `line2` (chaîne vide), et
 `shareCapital` (`null` pour une EI). Toutes les autres valeurs sont toujours présentes.
@@ -79,15 +74,15 @@ n'est pas compté dans le bandeau.
 ### 2.2 Identifiants légaux
 
 - **SIREN** : 8 chiffres aléatoires (premier non nul) + clé de Luhn. `356000000` est exclu
-  (acquis v1).
-- **NIC** **[tech]** : 5 chiffres, de `00010` à `00099` (siège), tels que le SIRET passe Luhn.
+  .
+- **NIC** : 5 chiffres, de `00010` à `00099` (siège), tels que le SIRET passe Luhn.
   Jamais `00000`.
 - **SIRET** = SIREN + NIC, Luhn valide sur 14 chiffres.
 - **TVA** : `FR` + clé sur 2 chiffres `(12 + 3 × (SIREN mod 97)) mod 97` + SIREN.
 - **RCS** : `RCS <ville du greffe> <A|B> <SIREN groupé 3-3-3>`.
   - Lettre **B** pour les sociétés, **A** pour toute EI (simplification documentée).
-  - **[tech]** Le greffe est la préfecture du département de l'adresse.
-- **Date de création** **[tech]** : uniforme entre une borne par forme et la veille du jour
+  - Le greffe est la préfecture du département de l'adresse.
+- **Date de création** : uniforme entre une borne par forme et la veille du jour
   de génération. Elle n'est jamais dans le futur ni antérieure à la forme :
   - SAS : 01/01/1994 ;
   - SASU : 01/01/1999 ;
@@ -99,7 +94,7 @@ n'est pas compté dans le bandeau.
 
 ### 2.3 Formes juridiques (8, pondérées)
 
-**[tech]** Pondération : SAS 25 %, SASU 20 %, SARL 20 %, EURL 10 %, EI 10 %, SCI 7 %,
+Pondération : SAS 25 %, SASU 20 %, SARL 20 %, EURL 10 %, EI 10 %, SCI 7 %,
 SA 5 %, SNC 3 %.
 
 | Forme | Code INSEE | Capital                                                | Fonction                    | NAF autorisés                   |
@@ -124,9 +119,9 @@ SA 5 %, SNC 3 %.
 - **NAF** : la **rév. 2.1** (NAF 2025, référence APE au 1er janvier 2027) sert de code par
   défaut. Le code **rév. 2** équivalent est stocké, affiché et utilisé au remplissage
   quand le champ l'attend (§5.3).
-- **[tech]** Le tirage porte sur 91 sous-classes « plausibles pour une PME », limitées à
+- Le tirage porte sur 91 sous-classes « plausibles pour une PME », limitées à
   celles dont l'équivalent rév. 2 est sans ambiguïté. Chaque sous-classe embarque son code et
-  son libellé dans les deux nomenclatures (ajusté : les nomenclatures complètes ne sont pas
+  son libellé dans les deux nomenclatures (les nomenclatures complètes ne sont pas
   embarquées, le remplissage d'un `select` n'a besoin que des codes de la société).
 - **Effectif** : tranche INSEE tirée selon la forme :
   - EI, SASU, EURL : 00 à 02 ;
@@ -139,7 +134,7 @@ SA 5 %, SNC 3 %.
   tiret, **38 caractères maximum**. La forme juridique n'est **jamais** incluse.
 - **Variante courte** (`legalNameShort`) : 20 caractères au plus, stockée pour rester stable.
   Elle sert quand `maxlength` est trop court.
-- **Construction** **[tech]** : 8 à 10 motifs par famille de NAF (`<NOM> <METIER>`,
+- **Construction** : 8 à 10 motifs par famille de NAF (`<NOM> <METIER>`,
   `<METIER> <LIEU>`, `<INITIALES> <ACTIVITE>`, `<ADJ> <METIER>`...). Les mots viennent de
   listes écrites à la main, les noms de famille de §2.8.
 - **Enseigne** : casse mixte, accents permis (« Atelier Delcourt »), dérivée de la raison
@@ -151,19 +146,19 @@ SA 5 %, SNC 3 %.
 
 - **Commune** : réelle, en **métropole et DOM** (971 à 976), **pondérée par la population**.
   Paris, Lyon et Marseille sont tirées par arrondissement. La Corse est codée 2A et 2B.
-- **Libellés** **[tech]** :
+- **Libellés** :
   - `city` : libellé officiel COG en casse mixte (« Saint-Étienne ») ;
   - Paris, Lyon et Marseille : `city` vaut « Paris », « Lyon » ou « Marseille », avec le code
     postal et le code INSEE de l'arrondissement ;
   - les `select` sont comparés après normalisation (§5.4).
 - **Code postal** : réel. Si la commune en a plusieurs, l'un est tiré.
 - **GPS** : centre de la commune ± 0,01° aléatoire, 6 décimales.
-- **Voie** **[tech]** :
+- **Voie** :
   - numéro de 1 à 199, suffixe bis ou ter dans 5 % des cas ;
   - type de voie pondéré (rue, avenue, boulevard, place, chemin, allée, impasse, route, quai) ;
   - nom tiré d'une liste générique de noms de voies courants ;
   - `line1Short` abrège le type de voie (« 12 bis av. de la Gare »), utilisée quand le champ est
-    trop court (ajusté : plus utile qu'une voie sans son type).
+    trop court (plus utile qu'une voie sans son type).
 - **Complément** (`line2`) : vide dans 60 % des cas, sinon « Bâtiment B », « ZA des ... »,
   « Lot 12 ».
 
@@ -173,9 +168,9 @@ SA 5 %, SNC 3 %.
   - 01 99 00 xx xx pour l'Île-de-France ;
   - 02 61 91, 03 53 01, 04 65 71, 05 36 49 pour les autres zones ;
   - les DOM suivent leur zone réelle : 05 pour les Antilles et la Guyane, 02 pour La Réunion et
-    Mayotte (ajusté).
+    Mayotte.
 
-  **[tech]** Les plages sont vérifiées contre la décision ARCEP en vigueur et sourcées
+  Les plages sont vérifiées contre la décision ARCEP en vigueur et sourcées
   dans `LICENSE-DATA.md`.
 
 - **Mobile du dirigeant** : 06 39 98 xx xx (plage fictive ARCEP).
@@ -187,8 +182,8 @@ SA 5 %, SNC 3 %.
 ### 2.8 Dirigeant
 
 - **Prénoms** : 240 prénoms courants (120 féminins, 120 masculins), avec leur genre.
-- **Noms** **[tech]** : 290 noms de famille parmi les plus fréquents en France.
-- Ajusté : ces listes sont établies à la main (un prénom ou un nom isolé n'est pas protégé),
+- **Noms** : 290 noms de famille parmi les plus fréquents en France.
+- Ces listes sont établies à la main (un prénom ou un nom isolé n'est pas protégé),
   les fichiers de l'INSEE n'étant pas accessibles depuis l'environnement de construction.
 - **Civilité** : cohérente avec le genre du prénom.
 - **Fonction** : selon la forme (§2.3).
@@ -200,14 +195,12 @@ SA 5 %, SNC 3 %.
   - Clé RIB : `97 - ((89 × banque + 15 × guichet + 3 × compte) mod 97)`.
   - Clé IBAN : mod 97, ISO 13616.
 - **Banques fictives** : 6 noms inventés, chacun avec un code banque **non attribué**
-  **[tech]**, vérifié contre la liste publique des établissements de crédit.
+  , vérifié contre la liste publique des établissements de crédit.
 - **BIC** : 8 caractères `XXXXFRPP`, avec un code établissement inventé et non attribué.
 
 ### 2.10 Comptabilité et conditions commerciales
 
 Ces données sont affichées dans la fiche et ne sont jamais détectées dans les formulaires.
-
-**[tech]**
 
 - **Codes tiers** : `customerCode` = `C` + 6 chiffres ; `supplierCode` = `F` + 6 chiffres.
 - **Comptes** :
@@ -228,7 +221,7 @@ Ces données sont détectées dans les formulaires.
 - **Codes ERP** :
   - `erpCompanyCode` : 3 lettres + 3 chiffres (`DEL001`) ;
   - `erpSiteCode` : `erpCompanyCode` + `-` + 2 chiffres.
-- **GLN** **[tech]** : 13 chiffres avec le préfixe GS1 de **circulation restreinte** `2`
+- **GLN** : 13 chiffres avec le préfixe GS1 de **circulation restreinte** `2`
   (usage interne), donc sans collision possible avec un GLN attribué. Clé GS1 mod 10
   (poids 3 et 1, ce n'est pas la clé de Luhn).
 - **`internalRef`** : `REF-` + 8 caractères alphanumériques majuscules.
@@ -236,17 +229,17 @@ Ces données sont détectées dans les formulaires.
 
 ### 2.12 Sources et licences
 
-| Données                                      | Source                                                             | Licence             |
-| -------------------------------------------- | ------------------------------------------------------------------ | ------------------- |
-| Communes, codes INSEE, départements, régions | INSEE, Code officiel géographique 2026                             | Licence Ouverte 2.0 |
-| Codes postaux                                | Base officielle des codes postaux (La Poste, data.gouv.fr)         | Licence Ouverte 2.0 |
-| Population                                   | INSEE, populations légales                                         | Licence Ouverte 2.0 |
-| Coordonnées des communes                     | IGN Admin Express COG, via `gregoiredavid/france-geojson` (ajusté) | Licence Ouverte 2.0 |
-| NAF rév. 2                                   | INSEE, via `@socialgouv/codes-naf`                                 | Licence Ouverte 2.0 |
-| NAF 2025 (sélection)                         | INSEE, Structure de la NAF 2025                                    | Licence Ouverte 2.0 |
-| Catégories juridiques                        | INSEE                                                              | Licence Ouverte 2.0 |
-| Prénoms, noms                                | Listes établies à la main (ajusté)                                 | sans objet          |
-| Plages téléphoniques fictives                | ARCEP, plan de numérotation, article 2.5.12                        | référence citée     |
+| Données                                      | Source                                                     | Licence             |
+| -------------------------------------------- | ---------------------------------------------------------- | ------------------- |
+| Communes, codes INSEE, départements, régions | INSEE, Code officiel géographique 2026                     | Licence Ouverte 2.0 |
+| Codes postaux                                | Base officielle des codes postaux (La Poste, data.gouv.fr) | Licence Ouverte 2.0 |
+| Population                                   | INSEE, populations légales                                 | Licence Ouverte 2.0 |
+| Coordonnées des communes                     | IGN Admin Express COG, via `gregoiredavid/france-geojson`  | Licence Ouverte 2.0 |
+| NAF rév. 2                                   | INSEE, via `@socialgouv/codes-naf`                         | Licence Ouverte 2.0 |
+| NAF 2025 (sélection)                         | INSEE, Structure de la NAF 2025                            | Licence Ouverte 2.0 |
+| Catégories juridiques                        | INSEE                                                      | Licence Ouverte 2.0 |
+| Prénoms, noms                                | Listes établies à la main                                  | sans objet          |
+| Plages téléphoniques fictives                | ARCEP, plan de numérotation, article 2.5.12                | référence citée     |
 
 - Aucune source sous ODbL n'est utilisée.
 - Les données sont produites par `scripts/build-data.mjs`, script reproductible qui indique
@@ -259,7 +252,7 @@ Ces données sont détectées dans les formulaires.
 ### 2.13 Aléa
 
 - `crypto.getRandomValues` uniquement.
-- **[tech]** Un nouveau `randomInt(max)` sur 32 bits remplace celui de la v1, limité à 256.
+- Un nouveau `randomInt(max)` sur 32 bits remplace celui de la v1, limité à 256.
   Le tirage pondéré est cumulatif.
 - Aucune graine.
 
@@ -278,11 +271,11 @@ Ces données sont détectées dans les formulaires.
   détectés et remplis qu'au sein d'un bloc.
 - **Visibles seulement** : sont exclus les éléments en `display:none` ou `visibility:hidden`,
   de taille nulle, en `aria-hidden="true"` ou dans un ancêtre masqué. Exception : un champ
-  masqué par un composant de saisie masquée (PrimeNG...) dont l'hôte est visible (acquis v1).
+  masqué par un composant de saisie masquée (PrimeNG...) dont l'hôte est visible.
 
 ### 3.2 Types reconnus (liste fermée)
 
-**[tech]** Une table déclarative (`vocab/fr.js`) décrit chaque type : mots-clés FR et EN,
+Une table déclarative (`vocab/fr.js`) décrit chaque type : mots-clés FR et EN,
 mots bloquants, jetons `autocomplete` HTML, indices de forme, libellé de menu, formats.
 
 | Catégorie                                    | Types                                                                                                                                                  |
@@ -291,7 +284,7 @@ mots bloquants, jetons `autocomplete` HTML, indices de forme, libellé de menu, 
 | **Adresse**                                  | ligne 1, complément, numéro, voie, code postal, ville, département, région, pays, adresse complète, latitude, longitude                                |
 | **Génériques** (ne qualifient jamais seuls)  | téléphone, mobile, email, site web, civilité, prénom, nom, nom complet, fonction, nom de banque, référence interne, UUID, code établissement ERP       |
 
-**Moteur** **[tech]** : le scoring de la v1 est généralisé à N types.
+**Moteur** : le scoring de la v1 est généralisé à N types.
 
 - Les poids sont ceux de la v1.
 - `autocomplete` vaut **3** quand sa valeur est un jeton HTML standard connu.
@@ -318,7 +311,7 @@ valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle 
 1. **Bloc de départ** : on remonte depuis le champ cliqué, en traversant le shadow DOM, jusqu'au
    premier ancêtre qui contient au moins **3 types distincts reconnus et visibles**, champ
    cliqué compris. Un `form` est une frontière : si le formulaire du champ en compte moins de
-   3, il n'y a pas de bloc (ajusté : sans cela, un champ isolé dans un petit formulaire
+   3, il n'y a pas de bloc (sans cela, un champ isolé dans un petit formulaire
    rejoignait les formulaires voisins de la page).
 2. **Extension** : on continue de remonter tant que :
    - l'ancêtre suivant n'est pas `body` ;
@@ -334,7 +327,7 @@ valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle 
    distincts, dont code postal et ville.
 5. **Sinon** : aucun bloc qualifié.
 6. **Doublons** dans le bloc final (par exemple email et confirmation d'email) : même valeur.
-7. **[tech]** Le comptage traverse les shadow roots ouverts et fermés. Il s'arrête au bout
+7. Le comptage traverse les shadow roots ouverts et fermés. Il s'arrête au bout
    de **2 000 nœuds** parcourus ; au-delà, le verdict de bloc est négatif.
 8. Les frames sont traitées une par une. Un formulaire réparti sur plusieurs iframes n'est
    pas vu entier : c'est une limite documentée.
@@ -343,11 +336,11 @@ valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle 
 
 - **Firefox** : à `menus.onShown`, comme en v1, avec un budget de 100 ms.
 - **Chromium** : au `pointerdown` du bouton droit, à `contextmenu` (ce qui couvre le
-  Ctrl+clic sur Mac), à la touche Menu et à Maj+F10. Le verdict de champ seul est aussi
-  calculé au `focusin`.
+  Ctrl+clic sur Mac), à la touche Menu et à Maj+F10, une seule fois par geste. Le verdict de
+  champ seul est aussi calculé au `focusin` et n'est envoyé que s'il a changé.
 - **Limite connue sous Chromium** : le menu peut s'ouvrir avec le verdict précédent
-  (rare, déjà documenté en v1).
-- **[tech]** **Au clic sur une entrée, l'action est toujours réévaluée** dans le script de
+  (rare).
+- **Au clic sur une entrée, l'action est toujours réévaluée** dans le script de
   contenu. Si elle n'est plus valide (champ non reconnu, bloc non qualifié), rien n'est
   écrit et le bandeau affiche « Champ non reconnu ».
 
@@ -361,13 +354,15 @@ valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle 
   - Elle est **vidée à chaque navigation** de la frame principale de l'onglet : nouveau
     document, rechargement compris.
   - Les changements de route d'une application monopage (`pushState`) ne la vident pas.
-  - Elle est vidée aussi à la fermeture de l'onglet.
+  - Celles des onglets fermés sont effacées à l'attribution suivante d'une société.
 - **Origine** : la société de l'onglet est créée par la première action qui en a besoin
   (§4.3). Elle est aussi attribuée à l'onglet quand l'utilisateur génère ou choisit une
   société depuis le popup ou la fiche (§6, §7).
-- **[tech]** Stockage dans `storage.session`, indexé par identifiant d'onglet : en mémoire,
-  jamais sur disque, et conservé pendant la mise en veille de l'arrière-plan. Le script de
-  contenu de la frame principale signale chaque nouveau document (`cff:page`).
+- Stockage dans `storage.session`, indexé par identifiant d'onglet : en mémoire,
+  jamais sur disque, et conservé pendant la mise en veille de l'arrière-plan. La société est
+  liée à l'identifiant du document de la frame principale, que l'arrière-plan lui demande
+  (`cff:page-id`) quand il lit ou attribue la société : un autre identifiant signifie que
+  l'onglet a changé de page. Aucun message n'est envoyé au chargement d'une page.
 - **Dernière société** : la dernière société créée ou choisie, tous onglets confondus.
   C'est elle que montrent la fiche et, à défaut de société d'onglet, le popup.
 
@@ -386,8 +381,8 @@ sous-entrées conditionnelles. L'entrée parente est masquée quand aucune ne s'
 - Le libellé de chaque type est défini dans `messages.json`, avec un message par type.
 - Un clic droit sur un champ non reconnu dans un bloc qualifié affiche les entrées 2 et 3.
 - Un champ générique isolé (hors bloc qualifié) n'affiche aucune entrée, sauf l'entrée 4.
-- **Pas de raccourci clavier.** La touche Menu et Maj+F10 fonctionnent (acquis v1).
-- **[tech]** `ensureMenus()` est idempotente et appelée à `onInstalled`, `onStartup` et sur
+- **Pas de raccourci clavier.** La touche Menu et Maj+F10 fonctionnent.
+- `ensureMenus()` est idempotente et appelée à `onInstalled`, `onStartup` et sur
   échec d'un `update`. Sous Firefox, la mise à jour se fait en un lot avant `refresh`.
 
 ### 4.3 Effet de chaque entrée
@@ -413,12 +408,12 @@ sous-entrées conditionnelles. L'entrée parente est masquée quand aucune ne s'
 
 - **Écrasement** : tout champ reconnu du bloc est écrasé, même s'il est déjà rempli. Les
   valeurs vides ou nulles ne sont jamais écrites (§2.1).
-- **Ordre** **[tech]** :
+- **Ordre** :
   1. pays, région, département, code postal, ville ;
   2. les autres champs, dans l'ordre du DOM ;
   3. attente de 150 ms, relecture, puis seconde passe sur les champs dont la page a changé
      la valeur.
-- **Séquence par champ** **[tech]** :
+- **Séquence par champ** :
   1. `focus({preventScroll: true})` ;
   2. insertion par `execCommand('insertText')` pour les champs texte. Si l'insertion réussit,
      **aucun** `input` synthétique supplémentaire n'est émis. Sinon, affectation par le
@@ -447,7 +442,7 @@ sous-entrées conditionnelles. L'entrée parente est masquée quand aucune ne s'
   - avec un lien « Annuler » quand quelque chose a été écrit ;
   - il disparaît après 6 s ou au clic.
 - **Accessibilité** : `role="status"`, `aria-live="polite"`.
-- **Technique** **[tech]** :
+- **Technique** :
   - le bandeau est dans un shadow root fermé ;
   - les styles passent par une `CSSStyleSheet` adoptée et les propriétés CSSOM (aucun
     `<style>` ni attribut `style` inséré), avec `all: initial` sur l'hôte, pour résister
@@ -459,8 +454,6 @@ sous-entrées conditionnelles. L'entrée parente est masquée quand aucune ne s'
   d'entrée 4 interroge le script de contenu et ne s'appuie sur aucun état de l'arrière-plan.
 
 ### 5.3 Formats adaptatifs
-
-**[tech]**
 
 - Le format par défaut est le premier de chaque ligne.
 - Seuls le placeholder, le masque, le pattern (lu comme texte, jamais exécuté) et
@@ -544,17 +537,17 @@ la nomenclature INSEE.
 ### 7.1 Ouverture et contenu
 
 - **Onglet unique** : il est réutilisé et activé s'il existe déjà.
-  - **[tech]** La fiche connaît son onglet par `tabs.getCurrent()` et répond au message
+  - La fiche connaît son onglet par `tabs.getCurrent()` et répond au message
     `cff:viewer-ping`. L'arrière-plan l'active ensuite avec `tabs.update` et
     `windows.update`. Aucune permission `tabs` n'est nécessaire.
   - La fiche montre la **dernière société** et se met à jour en direct
     (`storage.onChanged`).
   - Elle s'ouvre toujours dans une fenêtre normale (contrainte Chrome en mode `spanning`) et
     n'affiche jamais de société privée.
-- **Onglet cible** : **[tech]** l'arrière-plan mémorise le dernier onglet web actif
-  (`tabs.onActivated`, sans permission, en ignorant les pages de l'extension). C'est lui que
-  visent « Nouvelle société » et « Utiliser » depuis la fiche. Si cet onglet a été fermé, la
-  société devient seulement la dernière société.
+- **Onglet cible** : l'onglet utilisé en dernier avant la fiche (`tab.lastAccessed`, hors
+  pages de l'extension et fenêtres privées). C'est lui que visent « Nouvelle société » et
+  « Utiliser » depuis la fiche. Sans autre onglet, la société devient seulement la dernière
+  société.
 - **En-tête** :
   - raison sociale et forme ;
   - « Nouvelle société » : régénère en respectant les verrous, l'attribue à l'onglet cible,
@@ -637,12 +630,12 @@ fermé définitivement.
 ## 8. Stockage et vie privée
 
 - **Permission `storage`**.
-- **`storage.local`** (jamais synchronisé) **[tech]**, avec les clés : `schemaVersion`,
+- **`storage.local`** (jamais synchronisé) , avec les clés : `schemaVersion`,
   `last` (dernière société, fenêtres normales seulement), `history` (20 au plus),
   `favorites` (100 au plus, avec `label`), `locks`, `theme`, `onboardingDismissed`.
 - **`storage.session`** (en mémoire, jamais sur disque) : les sociétés d'onglet (normales et
-  privées), le dernier onglet web actif, et les sociétés privées du popup.
-- **Validation** **[tech]** :
+  privées) et les sociétés privées du popup.
+- **Validation** :
   - chaque objet est validé à la lecture ; un objet invalide est ignoré ;
   - une migration est prévue par `schemaVersion` (la v2 est la version 1) ;
   - si le stockage échoue, l'extension continue en mémoire et affiche une erreur dans le
@@ -651,7 +644,7 @@ fermé définitivement.
   - l'extension ne tourne en privé que si l'utilisateur l'autorise, ce qui est désactivé par
     défaut (documenté) ;
   - quand elle tourne en privé, **rien** n'est écrit dans `storage.local` ;
-  - **[tech]** `incognito: "spanning"`, détection par `tab.incognito`.
+  - `incognito: "spanning"`, détection par `tab.incognito`.
 - **Aucune collecte, aucune requête réseau** : `data_collection_permissions: none` est
   conservé. Le contenu des champs n'est lu qu'en mémoire, pour l'annulation et le contrôle,
   et n'est jamais transmis ni stocké.
@@ -669,16 +662,16 @@ fermé définitivement.
 
 ### 9.1 Architecture
 
-**[tech]** Pas de bundler, scripts classiques, JSDoc + `tsc`, comme en v1.
+Pas de bundler, scripts classiques, JSDoc + `tsc`.
 
 ```
 extension/
   manifest.json
   background/
     background.js        entrée : importScripts (Chromium) / liste scripts (Firefox), orchestration
-    data.js              lecture des données (fetch de runtime.getURL), cache
+    data.js              lecture des données (fetch de runtime.getURL), cache borné
     menus.js             sous-menu, état des entrées, ensure
-    tabs-state.js        sociétés d'onglet, dernier onglet web, onglet de la fiche (storage.session)
+    tabs-state.js        sociétés d'onglet et dernière société privée (storage.session)
     store.js             storage.local, validation, migration
   generators/
     random.js            tirages 32 bits, pondérés, UUID
@@ -707,11 +700,11 @@ extension/
   `content`. Il reçoit la **Company brute** et applique lui-même le formatage adaptatif
   (§5.3).
 - **Messages** :
-  - `cff:page` (nouveau document) ;
+  - `cff:page-id` (identifiant du document de la frame principale) ;
   - `cff:verdict` / `cff:evaluate` (verdict de champ, de bloc et d'annulation) ;
   - `cff:fill` (action et Company, la réponse donne le décompte) ;
   - `cff:undo` ;
-  - `cff:viewer-ping`, `cff:viewer-hello` ;
+  - `cff:viewer-ping` ;
   - les requêtes du popup et de la fiche (`cff:get-state`, `cff:generate`, `cff:use`...).
 
   Le protocole complet est décrit dans `docs/ARCHITECTURE.md`.
@@ -723,7 +716,7 @@ extension/
 - **Permissions finales** : `menus` ou `contextMenus`, et `storage`.
   - Ni `tabs`, ni `clipboardWrite` (la copie est faite sur un geste de l'utilisateur), ni
     `notifications`.
-  - Accès `<all_urls>` par le script de contenu, comme en v1.
+  - Accès `<all_urls>` par le script de contenu.
 - **Build** : `scripts/package.mjs` est étendu (permissions, pages, données). Les zips sont
   nommés `company-form-filler-<cible>-<version>.zip`.
 
@@ -731,10 +724,14 @@ extension/
 
 - **Paquet** : zip de **3 Mo** au plus. Données de communes : **1,5 Mo** au plus, mesuré
   compressé dans le zip.
-- **Script de contenu** : 80 Ko non compressé au plus, sans aucun travail au chargement de
-  la page, sauf l'envoi de `cff:page` par la frame principale.
+- **Script de contenu** : 80 Ko non compressé au plus, injecté à `document_idle`, sans
+  travail ni message au chargement de la page.
+- **Arrière-plan** : réveillé seulement par une action de l'utilisateur (menu, popup,
+  fiche), jamais par la navigation, un changement ou une fermeture d'onglet. Communes en
+  cache : 12 départements au plus.
 - **Temps** :
-  - verdict sous Firefox : 100 ms au plus ;
+  - verdict : 100 ms au plus sur une page lourde, quelques millisecondes sur un formulaire
+    courant ;
   - génération d'une société : 50 ms au plus, à chaud.
 - **Vérification** : un test de taille en CI et un test de temps indicatif sous jsdom.
 

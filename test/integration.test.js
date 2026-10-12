@@ -1,7 +1,5 @@
-// Runs the real background and content scripts together against a fake
-// extension API, for both the Firefox (menus.onShown) and the Chromium
-// (verdict pushed before the menu opens) code paths, plus the requests of
-// the popup and the viewer.
+// Real background and content scripts wired to a fake extension API, on both
+// the Firefox (menus.onShown) and Chromium (verdict pushed on right press) paths.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import vm from 'node:vm';
@@ -13,6 +11,8 @@ const manifest = JSON.parse(readProjectFile('extension/manifest.json'));
 const messages = JSON.parse(readProjectFile('extension/_locales/fr/messages.json'));
 const EXTENSION_ORIGIN = 'chrome-extension://cff/';
 const TAB_ID = 7;
+const VIEWER_TAB_ID = 99;
+const VIEWER_URL = `${EXTENSION_ORIGIN}viewer/viewer.html`;
 
 const ERP_PAGE = `<form id="supplier">
   <fieldset><legend>Identité</legend>
@@ -29,7 +29,6 @@ const ERP_PAGE = `<form id="supplier">
 <form id="newsletter"><label for="mail">Email</label><input id="mail"></form>
 <div><label for="lonely">SIRET</label><input id="lonely"></div>`;
 
-/** Lets pending promises, message handlers and short timers settle. */
 function flush(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -51,7 +50,6 @@ function getMessage(name, substitutions) {
   return text;
 }
 
-/** In-memory storage area. */
 function createArea() {
   /** @type {Map<string, unknown>} */
   const values = new Map();
@@ -90,14 +88,12 @@ function createEnvironment({ firefox, incognito = false }) {
     clicked: [],
     shown: [],
     hidden: [],
-    activated: [],
-    removed: [],
   };
   /** @type {Map<string, Record<string, unknown>>} */
   const items = new Map();
   /** @type {Map<number, Element>} */
   const targets = new Map();
-  const stats = { refreshes: 0 };
+  const stats = { refreshes: 0, fromContent: 0 };
   /** @type {string[]} */
   const createdTabs = [];
   /** @type {Array<number | undefined>} */
@@ -139,7 +135,6 @@ function createEnvironment({ firefox, incognito = false }) {
   }
 
   /**
-   * Delivers a message to listeners and resolves with the first response.
    * @param {Function[]} list
    * @param {unknown} message
    * @param {Record<string, unknown>} sender
@@ -188,6 +183,9 @@ function createEnvironment({ firefox, incognito = false }) {
           if (role === 'background') {
             return deliver(listeners.pages, message, { id: 'cff' });
           }
+          if (role === 'content') {
+            stats.fromContent++;
+          }
           const sender =
             role === 'content'
               ? { tab: { id: TAB_ID, incognito, windowId: 1 }, frameId: 0, url: pageUrl }
@@ -199,8 +197,12 @@ function createEnvironment({ firefox, incognito = false }) {
         sendMessage(/** @type {number} */ _tabId, /** @type {unknown} */ message) {
           return deliver(listeners.content, message, { id: 'cff' });
         },
-        async query() {
-          return [{ id: TAB_ID, incognito, windowId: 1 }];
+        async query(/** @type {{ active?: boolean }} */ properties) {
+          const open = [
+            { id: TAB_ID, incognito, windowId: 1, url: pageUrl, lastAccessed: 1 },
+            { id: VIEWER_TAB_ID, incognito: false, windowId: 1, url: VIEWER_URL, lastAccessed: 2 },
+          ].filter((tab) => !closedTabs.has(tab.id));
+          return properties.active ? open.filter((tab) => tab.id === TAB_ID) : open;
         },
         async create(/** @type {{ url: string, windowId?: number }} */ properties) {
           createdTabs.push(properties.url);
@@ -219,13 +221,10 @@ function createEnvironment({ firefox, incognito = false }) {
         async getCurrent() {
           return undefined;
         },
-        onActivated: event(listeners.activated),
-        onRemoved: event(listeners.removed),
       },
       windows: {
         async update() {},
         async getAll() {
-          // A focused private window and a normal one.
           return [
             { id: 5, focused: true, incognito: true },
             { id: 6, focused: false, incognito: false },
@@ -294,6 +293,27 @@ function createEnvironment({ firefox, incognito = false }) {
     },
     /** @param {Record<string, unknown>} message */
     request: (message) => pageApi.runtime.sendMessage(message),
+    /** @param {Record<string, unknown>} message */
+    requestFromViewer: (message) =>
+      deliver(listeners.background, message, {
+        id: 'cff',
+        url: VIEWER_URL,
+        tab: { id: VIEWER_TAB_ID, windowId: 1 },
+      }),
+    /** The content script of the next document answers with another page id. */
+    navigate() {
+      listeners.content.unshift(
+        (
+          /** @type {any} */ message,
+          /** @type {unknown} */ _sender,
+          /** @type {Function} */ respond,
+        ) => {
+          if (message.type === 'cff:page-id') {
+            respond({ page: 'next-document' });
+          }
+        },
+      );
+    },
     /** @param {{ reason: string, previousVersion?: string }} details */
     async install(details = { reason: 'update', previousVersion: '2.0.0' }) {
       for (const fn of listeners.installed) {
@@ -355,6 +375,39 @@ describe('Chromium path', () => {
     }
   });
 
+  it('sends nothing to the background until the user interacts', async () => {
+    const env = createEnvironment({ firefox: false });
+    await flush(5);
+    assert.equal(env.stats.fromContent, 0);
+  });
+
+  it('reports a right click once and skips unchanged focus verdicts', async () => {
+    const env = createEnvironment({ firefox: false });
+    await env.install();
+    const siret = env.input('siret');
+    await env.rightPress(siret);
+    siret.dispatchEvent(
+      new env.window.MouseEvent('contextmenu', {
+        bubbles: true,
+        composed: true,
+        clientX: 10,
+        clientY: 10,
+      }),
+    );
+    await flush(5);
+    assert.equal(env.stats.fromContent, 1);
+  });
+
+  it('does not send the same focus verdict twice', async () => {
+    const env = createEnvironment({ firefox: false });
+    const lonely = env.input('lonely');
+    lonely.focus();
+    lonely.blur();
+    lonely.focus();
+    await flush(5);
+    assert.equal(env.stats.fromContent, 1);
+  });
+
   it('shows the entries that apply before the menu opens', async () => {
     const env = createEnvironment({ firefox: false });
     await env.install();
@@ -389,7 +442,6 @@ describe('Chromium path', () => {
     assert.equal(stored.history.length, 1);
     assert.equal(stored.last?.identity.siret, siret);
 
-    // The tab now has a company: the menu offers to reuse it.
     await env.rightPress(env.input('lonely'));
     assert.deepEqual(visibleEntries(env), ['cff-root', 'cff-field', 'cff-undo']);
     await env.click('cff-field');
@@ -418,16 +470,7 @@ describe('Chromium path', () => {
     const first = env.input('lonely').value;
     assert.ok(isValidSiret(first));
 
-    // The content script of the next document announces itself.
-    await env.request({ type: 'noop' });
-    for (const fn of env.listeners.background) {
-      fn(
-        { type: 'cff:page' },
-        { tab: { id: TAB_ID }, frameId: 0, url: 'https://example.test/next' },
-        () => {},
-      );
-    }
-    await flush(5);
+    env.navigate();
     await env.click('cff-field');
     assert.notEqual(env.input('lonely').value, first);
     assert.equal(env.stored().history.length, 2);
@@ -515,7 +558,6 @@ describe('popup and viewer requests', () => {
     assert.equal(state.history.length, 1);
     assert.equal(state.storageError, false);
 
-    // The menu now offers the company of the tab.
     await env.install();
     await env.rightPress(env.input('city'));
     assert.ok(visibleEntries(env).includes('cff-form-current'));
@@ -574,39 +616,21 @@ describe('popup and viewer requests', () => {
 
   it('targets the last web tab from the viewer', async () => {
     const env = createEnvironment({ firefox: false });
-    // As in a browser: the viewer tab is activated before it can say who it is.
-    for (const fn of env.listeners.activated) {
-      await fn({ tabId: TAB_ID, windowId: 1 });
-      await fn({ tabId: 99, windowId: 1 });
-    }
-    await env.request({ type: 'cff:viewer-hello', tabId: 99 });
-    const company = await env.request({ type: 'cff:generate', useLocks: true });
-    const state = await env.request({ type: 'cff:get-state' });
+    const company = await env.requestFromViewer({ type: 'cff:generate', useLocks: true });
+    const state = await env.requestFromViewer({ type: 'cff:get-state' });
     assert.equal(state.tabCompany.id, company.id);
-
-    // Back to the viewer later: it is known now and never becomes the target.
-    for (const fn of env.listeners.activated) {
-      await fn({ tabId: TAB_ID, windowId: 1 });
-      await fn({ tabId: 99, windowId: 1 });
-    }
-    assert.equal((await env.request({ type: 'cff:get-state' })).tabCompany.id, company.id);
+    assert.ok(env.session.values.has(`tab:${TAB_ID}`));
+    assert.ok(!env.session.values.has(`tab:${VIEWER_TAB_ID}`), 'never the viewer tab itself');
   });
 
   it('forgets a closed tab and never targets it', async () => {
     const env = createEnvironment({ firefox: false });
-    for (const fn of env.listeners.activated) {
-      await fn({ tabId: TAB_ID, windowId: 1 });
-    }
-    await env.request({ type: 'cff:generate', useLocks: true });
+    await env.request({ type: 'cff:generate', tabId: TAB_ID });
+    assert.equal(env.session.values.size, 1);
     env.closedTabs.add(TAB_ID);
-    for (const fn of env.listeners.removed) {
-      await fn(TAB_ID);
-    }
-    await flush(5);
-    assert.equal(env.session.values.size, 0, [...env.session.values.keys()].join());
-    const company = await env.request({ type: 'cff:generate', useLocks: true });
+    const company = await env.requestFromViewer({ type: 'cff:generate', useLocks: true });
     assert.equal(env.stored().last?.id, company.id);
-    assert.equal(env.session.values.size, 0, 'no orphan tab company');
+    assert.equal(env.session.values.size, 0, [...env.session.values.keys()].join());
   });
 
   it('opens the viewer in a normal window, never in a private one', async () => {

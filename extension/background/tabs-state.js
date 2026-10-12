@@ -1,25 +1,13 @@
-/**
- * Session state, kept in storage.session: in memory, never written to disk,
- * and preserved while the background sleeps.
- *
- * - The company of each tab, cleared when the tab loads a new document or
- *   closes.
- * - The last company of private windows, which never reaches storage.local.
- * - The tab of the viewer and the last web tab the user activated, which
- *   the viewer actions target.
- */
+// storage.session is never written to disk and survives the background
+// sleeping, so private-window companies are kept here, not in storage.local.
 'use strict';
 
 const CffTabs = (() => {
   const TAB_PREFIX = 'tab:';
   const PRIVATE_LAST = 'privateLast';
-  const VIEWER_TAB = 'viewerTab';
-  const LAST_WEB_TAB = 'lastWebTab';
-  const PREVIOUS_WEB_TAB = 'previousWebTab';
 
   /**
-   * Fallback when storage.session is missing: a plain map, lost when the
-   * background sleeps.
+   * For browsers without storage.session; lost when the background sleeps.
    * @returns {CffStorageArea}
    */
   function memoryArea() {
@@ -75,29 +63,56 @@ const CffTabs = (() => {
           await area.set({ [key]: value });
         }
       } catch {
-        // Session storage full or unavailable: the state is only lost.
+        // Session storage full or unavailable: losing this state is harmless.
       }
     }
 
     return {
       /**
+       * The company belongs to the document it was set for: another page id
+       * means the tab navigated since.
        * @param {number} tabId
+       * @param {string | null} page
        * @returns {Promise<Company | null>}
        */
-      async getCompany(tabId) {
-        const value = await read(TAB_PREFIX + tabId);
-        return CffCompany.isCompany(value) ? value : null;
+      async getCompany(tabId, page) {
+        const entry = /** @type {{ company?: unknown, page?: unknown } | undefined} */ (
+          await read(TAB_PREFIX + tabId)
+        );
+        if (!entry) {
+          return null;
+        }
+        if (entry.page !== page || !CffCompany.isCompany(entry.company)) {
+          await write(TAB_PREFIX + tabId, null);
+          return null;
+        }
+        return entry.company;
       },
       /**
        * @param {number} tabId
-       * @param {Company | null} company
+       * @param {Company} company
+       * @param {string | null} page
        */
-      setCompany(tabId, company) {
-        return write(TAB_PREFIX + tabId, company);
+      setCompany(tabId, company, page) {
+        return write(TAB_PREFIX + tabId, { company, page });
       },
-      /** @param {number} tabId */
-      clearCompany(tabId) {
-        return write(TAB_PREFIX + tabId, null);
+      /**
+       * Closed tabs are dropped here rather than on tabs.onRemoved, which
+       * would wake the background each time any tab closes.
+       * @param {number[]} openTabIds
+       */
+      async forgetClosedTabs(openTabIds) {
+        const open = new Set(openTabIds.map((id) => TAB_PREFIX + id));
+        try {
+          const closed = Object.keys(await area.get(null)).filter(
+            (key) => key.startsWith(TAB_PREFIX) && !open.has(key),
+          );
+          if (closed.length) {
+            await area.remove(closed);
+          }
+        } catch {
+          // Retried on the next adoption.
+        }
       },
       /** @returns {Promise<Company | null>} */
       async getPrivateLast() {
@@ -107,48 +122,6 @@ const CffTabs = (() => {
       /** @param {Company} company */
       setPrivateLast(company) {
         return write(PRIVATE_LAST, company);
-      },
-      /** @returns {Promise<number | null>} */
-      async getViewerTab() {
-        const value = await read(VIEWER_TAB);
-        return typeof value === 'number' ? value : null;
-      },
-      /** @returns {Promise<number | null>} */
-      async getLastWebTab() {
-        const value = await read(LAST_WEB_TAB);
-        return typeof value === 'number' ? value : null;
-      },
-      /** @param {number} tabId */
-      async setLastWebTab(tabId) {
-        const last = await read(LAST_WEB_TAB);
-        if (last !== tabId) {
-          await write(PREVIOUS_WEB_TAB, typeof last === 'number' ? last : null);
-          await write(LAST_WEB_TAB, tabId);
-        }
-      },
-      /**
-       * Records the viewer tab. Its activation came before it could say who
-       * it was, and was taken for a web tab: the previous web tab is restored.
-       * @param {number} tabId
-       */
-      async registerViewerTab(tabId) {
-        await write(VIEWER_TAB, tabId);
-        if ((await read(LAST_WEB_TAB)) === tabId) {
-          await write(LAST_WEB_TAB, await read(PREVIOUS_WEB_TAB));
-          await write(PREVIOUS_WEB_TAB, null);
-        }
-      },
-      /**
-       * Forgets everything about a closed tab.
-       * @param {number} tabId
-       */
-      async forgetTab(tabId) {
-        await write(TAB_PREFIX + tabId, null);
-        for (const key of [LAST_WEB_TAB, PREVIOUS_WEB_TAB, VIEWER_TAB]) {
-          if ((await read(key)) === tabId) {
-            await write(key, null);
-          }
-        }
       },
     };
   }

@@ -1,15 +1,6 @@
-/**
- * Content script entry point, injected in every frame.
- *
- * Computes the verdict the menu needs (recognized field, qualified block,
- * pending undo), fills fields on request and shows the result banner.
- *
- * Firefox: the background asks for the verdict while the menu is open
- * (menus.onShown + menus.getTargetElement).
- * Chromium: there is no onShown event, so the verdict is pushed to the
- * background as soon as the interaction starts (right button pressed,
- * contextmenu, Menu key, Shift+F10), before the menu opens.
- */
+// Firefox asks for the verdict while the menu is shown (menus.onShown and
+// getTargetElement). Chromium has no onShown, so the verdict is pushed as soon
+// as the interaction starts, before the menu opens.
 'use strict';
 
 (() => {
@@ -28,11 +19,11 @@
       ? menus.getTargetElement.bind(menus)
       : null;
   const MAX_SHADOW_DEPTH = 16;
-  /** A focus this soon after a right press belongs to that press. */
-  const POINTER_FOCUS_WINDOW_MS = 500;
+  /** A focus or menu event this soon after a report belongs to the same gesture. */
+  const GESTURE_WINDOW_MS = 500;
 
   /**
-   * Returns the shadow root of `element`, even when it is closed.
+   * Chromium exposes closed roots through chrome.dom, Firefox on the element.
    * @param {Element} element
    * @returns {ShadowRoot | null}
    */
@@ -61,19 +52,22 @@
     return api.i18n.getMessage(name, substitutions && substitutions.map(String));
   }
 
-  /** Last control the user interacted with (Chromium path). */
   /** @type {Element | null} */
   let lastTarget = null;
-  let lastRightPress = 0;
+  /** Time of the last full report (block included), for the same gesture. */
+  let lastFullReport = 0;
+  /** Last verdict sent, so that moving focus within a form does not wake the background. */
+  let lastSent = '';
   /** The fill focuses each field in turn: those focus events are not the user's. */
   let filling = false;
 
-  /** Values replaced by the last fill of this frame. */
   /** @type {CffUndoEntry[]} */
   let pendingUndo = [];
 
+  /** Ties the company of the tab to this document: a new page starts afresh. */
+  const pageId = Array.from(crypto.getRandomValues(new Uint32Array(2)), String).join('-');
+
   /**
-   * Descends through shadow roots to the innermost element at (x, y).
    * @param {Element} start
    * @param {number} x
    * @param {number} y
@@ -92,10 +86,7 @@
     return element;
   }
 
-  /**
-   * Returns the focused element, descending through shadow roots.
-   * @returns {Element | null}
-   */
+  /** @returns {Element | null} */
   function deepActiveElement() {
     let element = document.activeElement;
     for (let depth = 0; element && depth < MAX_SHADOW_DEPTH; depth++) {
@@ -110,7 +101,6 @@
   }
 
   /**
-   * Whether `node` is `ancestor` or lies inside it, across shadow roots.
    * @param {Element} ancestor
    * @param {Element} node
    * @returns {boolean}
@@ -141,7 +131,6 @@
   }
 
   /**
-   * Resolves the element a menu action applies to.
    * @param {unknown} targetElementId
    * @returns {Element | null}
    */
@@ -164,9 +153,7 @@
     return deepActiveElement();
   }
 
-  /**
-   * @returns {boolean}
-   */
+  /** @returns {boolean} */
   function canUndo() {
     return pendingUndo.some((entry) => entry.element.isConnected);
   }
@@ -194,22 +181,27 @@
   }
 
   /**
-   * Chromium: evaluates `element` and reports the verdict to the background.
    * @param {Element | null} element
    * @param {{ withBlock: boolean }} options
    */
   function report(element, options) {
     lastTarget = element;
+    if (options.withBlock) {
+      lastFullReport = Date.now();
+    }
+    const verdict = verdictFor(element, options);
+    const key = JSON.stringify(verdict);
+    if (!options.withBlock && key === lastSent) {
+      return;
+    }
+    lastSent = key;
     try {
-      const sent = api.runtime.sendMessage({
-        type: 'cff:verdict',
-        verdict: verdictFor(element, options),
-      });
+      const sent = api.runtime.sendMessage({ type: 'cff:verdict', verdict });
       if (sent && typeof sent.catch === 'function') {
         sent.catch(() => {});
       }
     } catch {
-      // Extension reloaded or updated: this orphaned script has nothing to do.
+      // Orphaned script after an extension reload or update.
     }
   }
 
@@ -261,8 +253,7 @@
    */
 
   /**
-   * Fills the clicked field or its block, after checking again that the
-   * action still applies: the menu may show a stale verdict.
+   * Detects again: the menu may show a stale verdict.
    * @param {Element | null} element
    * @param {'field' | 'form'} action
    * @param {Company | null} company
@@ -311,7 +302,6 @@
     return { ok: true, filled: result.filled, skipped: result.skipped };
   }
 
-  /** Restores the values replaced by the last fill of this frame. */
   function undoLastFill() {
     const restored = CffFill.undo(pendingUndo);
     pendingUndo = [];
@@ -325,7 +315,6 @@
       'pointerdown',
       (event) => {
         if (event.button === 2) {
-          lastRightPress = Date.now();
           report(targetFromPointer(event), { withBlock: true });
         }
       },
@@ -335,7 +324,11 @@
       'contextmenu',
       (event) => {
         const fromPointer = event.clientX !== 0 || event.clientY !== 0;
-        report(fromPointer ? targetFromPointer(event) : deepActiveElement(), { withBlock: true });
+        const target = fromPointer ? targetFromPointer(event) : deepActiveElement();
+        // Already reported by the right press or the menu key of this gesture.
+        if (target !== lastTarget || Date.now() - lastFullReport >= GESTURE_WINDOW_MS) {
+          report(target, { withBlock: true });
+        }
       },
       options,
     );
@@ -348,13 +341,12 @@
       },
       options,
     );
-    // Focus only matters for editable elements (the menu is limited to the
-    // "editable" context); the block is left to the right press, which is
-    // more expensive to evaluate and comes right before the menu.
+    // The menu only shows on editable elements. The costlier block evaluation
+    // is left to the right press, which comes right before the menu.
     window.addEventListener(
       'focusin',
       () => {
-        if (filling || Date.now() - lastRightPress < POINTER_FOCUS_WINDOW_MS) {
+        if (filling || Date.now() - lastFullReport < GESTURE_WINDOW_MS) {
           return;
         }
         const element = deepActiveElement();
@@ -364,6 +356,12 @@
       },
       options,
     );
+    // Another frame or tab may have changed the menu since the last verdict.
+    window.addEventListener('blur', (event) => {
+      if (event.target === window) {
+        lastSent = '';
+      }
+    });
   }
 
   api.runtime.onMessage.addListener(
@@ -395,6 +393,9 @@
           ).then(sendResponse, () => sendResponse({ ok: false }));
           return true;
         }
+        case 'cff:page-id':
+          sendResponse({ page: pageId });
+          return undefined;
         case 'cff:undo':
           sendResponse({ restored: undoLastFill() });
           return undefined;
@@ -403,17 +404,4 @@
       }
     },
   );
-
-  // The top frame tells the background that a new document starts, so that
-  // the company of the tab is cleared on navigation.
-  if (window === window.top) {
-    try {
-      const sent = api.runtime.sendMessage({ type: 'cff:page' });
-      if (sent && typeof sent.catch === 'function') {
-        sent.catch(() => {});
-      }
-    } catch {
-      // Extension context invalidated.
-    }
-  }
 })();

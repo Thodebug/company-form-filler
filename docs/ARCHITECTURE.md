@@ -29,17 +29,24 @@ format de chaque valeur (`CffFormat`).
 ## Données
 
 - `data/fr/communes/<département>.json` : lignes `[code INSEE, nom, code(s) postal(aux),
-population, latitude, longitude]`, chargées à la demande et gardées en cache.
+population, latitude, longitude]`, chargées à la demande ; les 12 derniers départements
+  restent en cache.
 - `data/fr/departments.json`, `naf.json` : produits par `scripts/build-data.mjs`.
 - Les autres fichiers sont saisis à la main. Voir `LICENSE-DATA.md`.
 
 ## État
 
-| Où                           | Quoi                                                                                                         | Durée de vie                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| `storage.local`, clé `cff`   | dernière société, historique (20), favoris (100), verrous, thème, guide fermé                                | permanent, jamais synchronisé            |
-| `storage.session`            | société de chaque onglet (`tab:<id>`), dernière société privée, onglet de la fiche, dernier onglet web actif | session du navigateur, jamais sur disque |
-| Mémoire du script de contenu | valeurs remplacées par le dernier remplissage de la frame                                                    | jusqu'au rechargement                    |
+| Où                           | Quoi                                                                                          | Durée de vie                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `storage.local`, clé `cff`   | dernière société, historique (20), favoris (100), verrous, thème, guide fermé                 | permanent, jamais synchronisé            |
+| `storage.session`            | société de chaque onglet et identifiant de son document (`tab:<id>`), dernière société privée | session du navigateur, jamais sur disque |
+| Mémoire du script de contenu | valeurs remplacées par le dernier remplissage de la frame                                     | jusqu'au rechargement                    |
+
+La société d'un onglet n'est rendue que si la frame principale répond encore avec le même
+identifiant de document : une navigation l'invalide sans qu'aucun message soit envoyé au
+chargement des pages. L'arrière-plan n'écoute aucun évènement d'onglet ; il n'est réveillé que
+par le menu, le popup ou la fiche. Les sociétés des onglets fermés sont effacées à
+l'attribution suivante.
 
 Toute lecture de `storage.local` passe par `CffStore.sanitize` : une société invalide, un verrou
 inconnu ou un thème inconnu sont ignorés. `CffStore.migrate` accueillera les changements de
@@ -51,7 +58,6 @@ schéma (`schemaVersion`).
 
 | Message                     | Quand                                                                      | Effet                                       |
 | --------------------------- | -------------------------------------------------------------------------- | ------------------------------------------- |
-| `cff:page`                  | chargement d'un document dans la frame principale                          | vide la société de l'onglet                 |
 | `cff:verdict` `{ verdict }` | Chromium : bouton droit pressé, `contextmenu`, touche Menu, Maj+F10, focus | met à jour le sous-menu avant son ouverture |
 
 ### Arrière-plan vers script de contenu (`tabs.sendMessage`, frame cliquée)
@@ -61,22 +67,22 @@ schéma (`schemaVersion`).
 | `cff:evaluate` `{ targetElementId? }`                                         | `{ verdict }`                                                                    |
 | `cff:fill` `{ targetElementId?, action: 'field' \| 'form', company \| null }` | `{ ok, filled?, skipped? }` ; le script revérifie l'action et affiche le bandeau |
 | `cff:undo`                                                                    | `{ restored }`                                                                   |
+| `cff:page-id` (frame principale)                                              | `{ page }`, identifiant tiré au chargement du document                           |
 
 Un verdict vaut `{ field, block, canUndo }` : type fort ou d'adresse du champ cliqué,
 qualification du bloc (`company`, `address` ou `null`), annulation possible dans la frame.
 
 ### Popup et fiche vers arrière-plan
 
-| Message                                                                    | Effet                                                                                                         |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `cff:get-state` `{ tabId?, incognito? }`                                   | état persistant, société de l'onglet (`tabId`, ou dernier onglet web pour la fiche), drapeaux privé et erreur |
-| `cff:generate` `{ tabId?, incognito?, useLocks? }`                         | nouvelle société pour l'onglet ; `useLocks` (fiche) applique les verrous à partir de la dernière société      |
-| `cff:use` `{ companyId, tabId?, incognito? }`                              | une société de l'historique ou des favoris devient la dernière et celle de l'onglet                           |
-| `cff:favorite` `{ companyId, favorite, label }`                            | ajoute, renomme ou retire un favori                                                                           |
-| `cff:history-delete` `{ companyId }`, `cff:history-clear`, `cff:clear-all` | historique et effacement                                                                                      |
-| `cff:locks` `{ locks }`, `cff:theme` `{ theme }`, `cff:onboarding-dismiss` | réglages de la fiche                                                                                          |
-| `cff:open-viewer`                                                          | ouvre la fiche ou active son onglet                                                                           |
-| `cff:viewer-hello` `{ tabId }`                                             | la fiche annonce son onglet (exclu du « dernier onglet web »)                                                 |
+| Message                                                                    | Effet                                                                                                                |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `cff:get-state` `{ tabId?, incognito? }`                                   | état persistant, société de l'onglet (`tabId`, ou onglet utilisé en dernier pour la fiche), drapeaux privé et erreur |
+| `cff:generate` `{ tabId?, incognito?, useLocks? }`                         | nouvelle société pour l'onglet ; `useLocks` (fiche) applique les verrous à partir de la dernière société             |
+| `cff:use` `{ companyId, tabId?, incognito? }`                              | une société de l'historique ou des favoris devient la dernière et celle de l'onglet                                  |
+| `cff:favorite` `{ companyId, favorite, label }`                            | ajoute, renomme ou retire un favori                                                                                  |
+| `cff:history-delete` `{ companyId }`, `cff:history-clear`, `cff:clear-all` | historique et effacement                                                                                             |
+| `cff:locks` `{ locks }`, `cff:theme` `{ theme }`, `cff:onboarding-dismiss` | réglages de la fiche                                                                                                 |
+| `cff:open-viewer`                                                          | ouvre la fiche ou active son onglet                                                                                  |
 
 L'arrière-plan n'accepte ces requêtes que du popup (sans onglet) ou d'une page de l'extension
 (URL de son origine) : une page web ne peut pas les envoyer.
@@ -103,8 +109,12 @@ affiché avec un verdict périmé ne crée rien et le bandeau indique « Champ n
 
 1. `CffDetection.detectType` attribue un score à chaque type de `vocab/fr.js` à partir des
    attributs, libellés, attributs ARIA, `autocomplete`, type de champ, masque et texte voisin.
+   Les mots-clés d'un type forment une seule expression régulière, et les correspondances sont
+   mises en cache par texte : classes, attributs et titres de colonne se répètent d'un champ à
+   l'autre.
 2. `CffDetection.findBlock` cherche le bloc du champ : premier ancêtre à trois types reconnus et
-   visibles, sans sortir du formulaire, puis extension tant qu'aucun type ne se répète.
+   visibles, sans sortir du formulaire, puis extension tant qu'aucun type ne se répète. Les
+   champs de l'ancêtre suivant ne sont examinés que jusqu'au premier type répété.
 3. `CffFill.fill` écrit les valeurs (géographie d'abord), contrôle ce que la page a gardé,
    repasse sur les champs modifiés par la page et renvoie de quoi annuler.
 

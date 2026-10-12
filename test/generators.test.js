@@ -15,14 +15,14 @@ const random = get('CffRandom');
 const checksums = get('CffChecksums');
 const text = get('CffText');
 const generator = get('CffCompany');
+const dataModule = get('CffData');
 
 const COMPANY_DRAWS = Number(process.env.CFF_COMPANY_DRAWS || 100_000);
 const TODAY = new Date('2026-10-12T10:00:00Z');
 const FICTION_LANDLINE = /^0(199 ?00|261 ?91|353 ?01|465 ?71|536 ?49)/;
 
 /**
- * Copies a value created in the script context into this realm, so that
- * deep comparisons do not trip on different prototypes.
+ * Values from the vm context have foreign prototypes, which deepEqual rejects.
  * @template T
  * @param {T} value
  * @returns {T}
@@ -312,7 +312,7 @@ describe('company locks', () => {
         locks: ['identity'],
         today: TODAY,
       });
-      // The RCS follows the registry of the new address.
+      // The RCS city follows the new address; only its number is locked.
       assert.deepEqual(
         plain({ ...next.identity, rcs: '' }),
         plain({ ...previous.identity, rcs: '' }),
@@ -345,6 +345,26 @@ describe('company locks', () => {
   });
 });
 
+describe('data source', () => {
+  it('keeps a bounded number of departments in memory', async () => {
+    /** @type {string[]} */
+    const reads = [];
+    const source = dataModule.createSource(async (/** @type {string} */ path) => {
+      reads.push(path);
+      return [];
+    });
+    const codes = Array.from({ length: 13 }, (_, i) => String(i + 1).padStart(2, '0'));
+    for (const code of codes) {
+      await source.communes(code);
+    }
+    await source.communes('13');
+    await source.communes('02');
+    assert.equal(reads.length, 13, 'recent departments are served from memory');
+    await source.communes('01');
+    assert.equal(reads.length, 14, 'the least recently used department was evicted');
+  });
+});
+
 describe('store', () => {
   const { get: getStore } = loadScripts([...GENERATOR_SCRIPTS, 'background/store.js']);
   const CffStore = getStore('CffStore');
@@ -356,7 +376,7 @@ describe('store', () => {
     const area = {
       async get() {
         reads++;
-        // Unreadable for the first two reads: the first get and the update.
+        // Fail both the initial get and the read inside update().
         if (reads <= 2) {
           throw new Error('storage unavailable');
         }

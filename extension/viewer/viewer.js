@@ -1,8 +1,3 @@
-/**
- * Viewer: the full sheet of the last company, with copy on click, section
- * locks, history and favorites. Updates live when another part of the
- * extension creates or chooses a company.
- */
 'use strict';
 
 (() => {
@@ -398,11 +393,8 @@
     byId('panel-favorites').hidden = history;
   }
 
-  /**
-   * Re-renders the page, keeping the keyboard focus on the same control (or
-   * on its list when the control is gone) and leaving a favorite label being
-   * typed untouched.
-   */
+  // Runs on every storage change, so it must keep the keyboard focus and leave
+  // a favorite label being typed alone.
   function render() {
     const state = view.state;
     if (!state) {
@@ -466,7 +458,6 @@
     window.scrollTo({ top: 0 });
   }
 
-  /** Tells screen readers which company the sheet now shows. */
   function announceCompany() {
     const company = view.state && view.state.last;
     if (company) {
@@ -497,7 +488,7 @@
   }
 
   /**
-   * Keyboard navigation between the two tabs (arrows), as in a tab list.
+   * ARIA tabs pattern: arrow keys switch tabs.
    * @param {KeyboardEvent} event
    */
   function onTabKey(event) {
@@ -556,7 +547,7 @@
       await refresh();
     });
 
-    // Live update when the menu or the popup creates or chooses a company.
+    // The menu and the popup can change the stored company too.
     api.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'local' && 'cff' in changes) {
         refresh();
@@ -583,10 +574,6 @@
       .querySelector('.side')
       ?.setAttribute('aria-label', `${t('viewerHistory')} / ${t('viewerFavorites')}`);
     bindEvents();
-    const tab = await api.tabs.getCurrent();
-    if (tab && typeof tab.id === 'number') {
-      await send({ type: 'cff:viewer-hello', tabId: tab.id });
-    }
     await refresh();
   }
 

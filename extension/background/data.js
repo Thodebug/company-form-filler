@@ -1,10 +1,8 @@
-/**
- * Loads the static data of extension/data/fr, with an in-memory cache.
- * Communes are loaded per department, on demand.
- */
+// Communes are split per department and fetched on demand to keep startup light.
 'use strict';
 
 const CffData = (() => {
+  const MAX_CACHED_DEPARTMENTS = 12;
   const STATIC_FILES = /** @type {const} */ ({
     naf: 'naf',
     legalForms: 'legal-forms',
@@ -18,14 +16,18 @@ const CffData = (() => {
   });
 
   /**
-   * @param {(path: string) => Promise<unknown>} readJson Reads a file of
-   *   extension/data/fr, path relative to that folder without extension.
+   * @param {(path: string) => Promise<unknown>} readJson Path relative to
+   *   extension/data/fr, without extension.
    * @returns {CompanyDataSource}
    */
   function createSource(readJson) {
     /** @type {Promise<CompanyData> | null} */
     let staticData = null;
-    /** @type {Map<string, Promise<CommuneRow[]>>} */
+    /**
+     * Least recently used last. Bounded: a long session would otherwise end
+     * up holding every commune of France.
+     * @type {Map<string, Promise<CommuneRow[]>>}
+     */
     const communes = new Map();
 
     return {
@@ -34,6 +36,7 @@ const CffData = (() => {
           staticData = Promise.all(
             Object.entries(STATIC_FILES).map(async ([key, file]) => [key, await readJson(file)]),
           ).then((entries) => /** @type {CompanyData} */ (Object.fromEntries(entries)));
+          // A failed load is forgotten so the next call retries.
           staticData.catch(() => {
             staticData = null;
           });
@@ -44,11 +47,20 @@ const CffData = (() => {
         if (!/^[0-9AB]{2,3}$/.test(departmentCode)) {
           return Promise.reject(new Error(`Invalid department ${departmentCode}`));
         }
-        let rows = communes.get(departmentCode);
-        if (!rows) {
-          rows = /** @type {Promise<CommuneRow[]>} */ (readJson(`communes/${departmentCode}`));
-          communes.set(departmentCode, rows);
-          rows.catch(() => communes.delete(departmentCode));
+        const cached = communes.get(departmentCode);
+        const rows =
+          cached || /** @type {Promise<CommuneRow[]>} */ (readJson(`communes/${departmentCode}`));
+        communes.delete(departmentCode);
+        communes.set(departmentCode, rows);
+        if (!cached) {
+          rows.catch(() => {
+            if (communes.get(departmentCode) === rows) {
+              communes.delete(departmentCode);
+            }
+          });
+          if (communes.size > MAX_CACHED_DEPARTMENTS) {
+            communes.delete(/** @type {string} */ (communes.keys().next().value));
+          }
         }
         return rows;
       },
@@ -56,7 +68,6 @@ const CffData = (() => {
   }
 
   /**
-   * Source reading the packaged files through fetch.
    * @param {(path: string) => string} getUrl runtime.getURL
    * @returns {CompanyDataSource}
    */

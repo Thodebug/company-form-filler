@@ -52,7 +52,7 @@
       "all_frames": true,
       "match_about_blank": true,
       "match_origin_as_fallback": true,
-      "run_at": "document_end"
+      "run_at": "document_idle"
     }
   ],
   "incognito": "spanning",

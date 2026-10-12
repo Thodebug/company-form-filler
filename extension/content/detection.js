@@ -1,22 +1,10 @@
-/**
- * Field detection.
- *
- * detectType() decides what a single control expects by scoring clues found
- * on it and on its own wrappers (labels, attributes, nearby text, input
- * masks). findBlock() then looks around the clicked control for the group of
- * fields it belongs to, and qualifies that group as a company form, an
- * address form or neither.
- *
- * Everything runs at interaction time, on the clicked control and its
- * ancestors only; the page is never scanned as a whole.
- */
+// Runs on the clicked control and its ancestors only; the page is never
+// scanned as a whole.
 'use strict';
 
 const CffDetection = (() => {
-  /** Input types that can receive a generated value. */
   const ELIGIBLE_INPUT_TYPES = new Set(['text', 'tel', 'number', 'search', 'email', 'url', 'date']);
 
-  /** Input types that count as "another field" when looking at wrappers. */
   const TEXT_LIKE_TYPES = new Set([
     ...ELIGIBLE_INPUT_TYPES,
     'password',
@@ -38,13 +26,10 @@ const CffDetection = (() => {
   const NEIGHBOR_TEXT_LIMIT = 100;
   /** Neighbour text this short is a label in all but name (table cells, grids). */
   const LABEL_LIKE_TEXT_LIMIT = 30;
-  /** Longer `pattern` attributes are ignored. */
   const MAX_PATTERN_LENGTH = 120;
-  /** Distinct recognized types that make a group of fields a block. */
   const BLOCK_MIN_TYPES = 3;
-  /** Address types needed to qualify an address block, with postal code and city. */
   const ADDRESS_MIN_TYPES = 3;
-  /** Nodes visited at most when collecting the controls of an ancestor. */
+  /** Bounds the walk on very large pages. */
   const MAX_NODES = 2000;
   const MAX_SHADOW_DEPTH = 16;
 
@@ -69,8 +54,8 @@ const CffDetection = (() => {
   ];
 
   /**
-   * Returns the shadow root of an element, open or closed. Replaced by the
-   * content script with the extension API, which also reaches closed roots.
+   * Replaced by the content script with the extension API, which also reaches
+   * closed shadow roots.
    * @type {(element: Element) => ShadowRoot | null}
    */
   let shadowRootOf = (element) => element.shadowRoot || null;
@@ -85,8 +70,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Lowercases, strips accents, splits camelCase and keeps only [a-z0-9]
-   * words separated by single spaces.
    * @param {string} text
    * @returns {string}
    */
@@ -94,7 +77,7 @@ const CffDetection = (() => {
     return String(text)
       .replace(/([a-z\d])([A-Z])/g, '$1 $2')
       .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .replace(/\bn\s*[°º]/g, ' numero ')
       .replace(/[^a-z0-9]+/g, ' ')
@@ -134,8 +117,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Whether the user can see the element: not hidden, displayed with a
-   * non-empty box, or the real input of a visible masked input component.
    * @param {Element} element
    * @returns {boolean}
    */
@@ -146,8 +127,8 @@ const CffDetection = (() => {
     if (isRendered(element)) {
       return true;
     }
-    // A masked input component may hide its real input behind a visible
-    // host carrying the mask (acquired in v1).
+    // Masked input components may hide the real input behind a visible host
+    // carrying the mask.
     for (let current = composedParent(element), depth = 0; current && depth < 3; depth++) {
       if (Array.from(current.attributes).some((attribute) => /mask/i.test(attribute.name))) {
         return isRendered(current);
@@ -158,10 +139,7 @@ const CffDetection = (() => {
   }
 
   /**
-   * Whether an element is displayed with a non-empty box. Uses
-   * checkVisibility() and the layout boxes when the browser provides them;
-   * otherwise (no layout, as in tests) falls back to computed styles of the
-   * element and its composed ancestors.
+   * Falls back to computed styles where there is no layout (tests).
    * @param {Element} element
    * @returns {boolean}
    */
@@ -189,7 +167,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Parent element, crossing shadow root boundaries to the host.
    * @param {Element} element
    * @returns {Element | null}
    */
@@ -219,9 +196,26 @@ const CffDetection = (() => {
   }
 
   /**
-   * Wrappers of `field` (up to MAX_ANCESTOR_LEVELS) that hold no other
-   * control. Stops at the first wrapper shared with another field, so section
-   * titles and form-wide attributes are ignored.
+   * Live collections are evaluated lazily, so the search stops at the first
+   * match instead of listing every control of a large wrapper.
+   * @param {Element} wrapper
+   * @param {Element} field
+   * @returns {boolean}
+   */
+  function hasOtherControl(wrapper, field) {
+    for (const tag of ['input', 'select', 'textarea']) {
+      for (const control of wrapper.getElementsByTagName(tag)) {
+        if (control !== field && isTextLikeControl(control)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Stops at the first wrapper shared with another field, so section titles
+   * and form-wide attributes do not count as clues.
    * @param {Element} field
    * @returns {Element[]}
    */
@@ -233,10 +227,7 @@ const CffDetection = (() => {
       if (current.localName === 'body' || current.localName === 'html') {
         break;
       }
-      const others = Array.from(current.querySelectorAll('input, select, textarea')).filter(
-        (control) => control !== field && isTextLikeControl(control),
-      );
-      if (others.length > 0) {
+      if (hasOtherControl(current, field)) {
         break;
       }
       result.push(current);
@@ -270,7 +261,6 @@ const CffDetection = (() => {
    */
 
   /**
-   * Collects every text that may describe the field, with its weight.
    * @param {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} field
    * @param {Element[]} wrappers
    * @returns {Source[]}
@@ -281,8 +271,8 @@ const CffDetection = (() => {
     /**
      * @param {string | null | undefined} text
      * @param {number} weight
-     * @param {boolean} [placeholder] An example value ("nom@exemple.fr"): it
-     *   says nothing about whose value the field holds.
+     * @param {boolean} [placeholder] An example value ("nom@exemple.fr") says
+     *   nothing about whose value the field holds.
      */
     const add = (text, weight, placeholder = false) => {
       if (text && text.trim()) {
@@ -342,12 +332,9 @@ const CffDetection = (() => {
   }
 
   /**
-   * Reads the number of digits described by a simple `pattern` attribute,
-   * without executing it: the page controls this text, and running an
-   * arbitrary regular expression could freeze the page (catastrophic
-   * backtracking). Recognized: \d or [0-9], with an optional {n} count,
-   * separated by optional spaces, with optional anchors, a (?:...) wrapper
-   * and | alternatives. Anything else gives null.
+   * Parses the pattern instead of executing it: the page controls this text,
+   * and an arbitrary regular expression could freeze it (catastrophic
+   * backtracking).
    * @param {string} pattern
    * @returns {number | null}
    */
@@ -379,8 +366,8 @@ const CffDetection = (() => {
   }
 
   /**
-   * Counts digit slots (9, 0 or #) in the first mask-like attribute found,
-   * for example PrimeNG `mask="999 999 999 99999"` on the component host.
+   * Digit slots of a mask attribute, such as PrimeNG `mask="999 999 999 99999"`
+   * on the component host.
    * @param {Element[]} elements
    * @returns {number}
    */
@@ -403,8 +390,6 @@ const CffDetection = (() => {
    */
 
   /**
-   * Length clues for the numeric identifiers: maxlength, minlength, pattern,
-   * input mask and placeholder shape.
    * @param {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} field
    * @param {Element[]} wrappers
    * @returns {Map<string, Hint>}
@@ -487,7 +472,60 @@ const CffDetection = (() => {
   }
 
   /**
-   * Whether the kind of control can hold a value of `typeId`.
+   * @typedef {{ definition: CffFieldType, keyword: RegExp, blocker: RegExp | null }} Matcher
+   */
+
+  /** @type {Matcher[] | null} */
+  let matcherCache = null;
+  /** @type {Map<string, Set<number>>} */
+  const matchCache = new Map();
+  const MATCH_CACHE_SIZE = 1000;
+
+  /**
+   * One alternation per type: a single test is much cheaper than one per
+   * keyword. Built on first use, so pages where the menu never opens pay
+   * nothing.
+   * @returns {Matcher[]}
+   */
+  function matchers() {
+    /** @param {RegExp[]} patterns */
+    const anyOf = (patterns) =>
+      new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'));
+    if (!matcherCache) {
+      matcherCache = CffVocab.TYPES.map((definition) => ({
+        definition,
+        keyword: anyOf(definition.keywords),
+        blocker:
+          definition.blockers && definition.blockers.length ? anyOf(definition.blockers) : null,
+      }));
+    }
+    return matcherCache;
+  }
+
+  /**
+   * Cached because most clues repeat from one control to the next (classes,
+   * data attributes, column titles).
+   * @param {string} text
+   * @returns {Set<number>} Indexes in CffVocab.TYPES.
+   */
+  function typesMentionedIn(text) {
+    let found = matchCache.get(text);
+    if (!found) {
+      found = new Set();
+      matchers().forEach(({ keyword, blocker }, index) => {
+        if (keyword.test(text) && !(blocker && blocker.test(text))) {
+          /** @type {Set<number>} */ (found).add(index);
+        }
+      });
+      if (matchCache.size >= MATCH_CACHE_SIZE) {
+        matchCache.clear();
+      }
+      matchCache.set(text, found);
+    }
+    return found;
+  }
+
+  /**
    * @param {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} field
    * @param {string} typeId
    * @returns {boolean}
@@ -512,7 +550,6 @@ const CffDetection = (() => {
    */
 
   /**
-   * Decides what a control expects.
    * @param {Element | null | undefined} element
    * @returns {TypeDetection}
    */
@@ -530,6 +567,7 @@ const CffDetection = (() => {
     const inputType =
       field.localName === 'input' ? /** @type {HTMLInputElement} */ (field).type : '';
 
+    const mentions = sources.map((source) => typesMentionedIn(source.text));
     /** @type {{ id: string, score: number, order: number }[]} */
     const candidates = [];
     CffVocab.TYPES.forEach((definition, order) => {
@@ -538,14 +576,12 @@ const CffDetection = (() => {
       }
       let score = 0;
       let evidence = false;
-      for (const source of sources) {
-        const matches = definition.keywords.some((pattern) => pattern.test(source.text));
-        const blocked = (definition.blockers || []).some((pattern) => pattern.test(source.text));
-        if (matches && !blocked) {
+      sources.forEach((source, index) => {
+        if (mentions[index].has(order)) {
           score += source.weight;
           evidence = true;
         }
-      }
+      });
       if ((definition.autocomplete || []).some((token) => autocomplete.includes(token))) {
         score += WEIGHT_TOKEN;
         evidence = true;
@@ -578,9 +614,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Adjusts a detected type with its context: an address textarea holds the
-   * full address, a company email or phone becomes the manager's one when
-   * the field names a person, and a phone named "portable" is a mobile.
    * @param {Element} field
    * @param {string} type
    * @param {Source[]} sources
@@ -606,7 +639,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Category of a type, `managerEmail` included.
    * @param {string} type
    * @returns {'strong' | 'address' | 'generic'}
    */
@@ -616,8 +648,6 @@ const CffDetection = (() => {
   }
 
   /**
-   * Eligible controls under `root`, shadow roots included, in document
-   * order. Returns null when more than MAX_NODES nodes would be visited.
    * @param {Element} root
    * @returns {Element[] | null}
    */
@@ -661,15 +691,6 @@ const CffDetection = (() => {
    */
 
   /**
-   * Finds the group of fields the clicked control belongs to.
-   *
-   * 1. Walks up from the control to the first ancestor holding at least
-   *    three distinct recognized, visible types, without leaving its form.
-   * 2. Extends to the next ancestors as long as they bring no type already
-   *    present (a form split in sections is taken whole; a page with billing
-   *    and shipping addresses stops at the clicked one), and stops at a form.
-   * 3. Qualifies the block: company if it holds a company field, address if
-   *    it holds three address fields with the postal code and the city.
    * @param {Element | null | undefined} element
    * @returns {Block | null}
    */
@@ -705,7 +726,6 @@ const CffDetection = (() => {
         controls = found;
         break;
       }
-      // A form is a boundary: its fields never join another form's.
       if (current.localName === 'form') {
         return null;
       }
@@ -714,6 +734,8 @@ const CffDetection = (() => {
       return null;
     }
 
+    // Growing until a type repeats takes a sectioned form whole but stops
+    // between billing and shipping addresses.
     let types = typesOf(controls);
     while (block.localName !== 'form') {
       const next = composedParent(block);
@@ -725,8 +747,21 @@ const CffDetection = (() => {
         break;
       }
       const known = new Set(controls);
-      const newTypes = typesOf(nextControls.filter((control) => !known.has(control)));
-      if ([...newTypes].some((type) => types.has(type))) {
+      /** @type {Set<string>} */
+      const newTypes = new Set();
+      // Stops at the first repeat: a large parent form is rarely read whole.
+      const repeats = nextControls.some((control) => {
+        if (known.has(control)) {
+          return false;
+        }
+        const type = typeOf(control);
+        if (type === null) {
+          return false;
+        }
+        newTypes.add(type);
+        return types.has(type);
+      });
+      if (repeats) {
         break;
       }
       block = next;
