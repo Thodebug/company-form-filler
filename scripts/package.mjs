@@ -1,9 +1,6 @@
-// Builds one folder and one zip per browser family in dist/.
-//
-// The code is copied untouched; only manifest.json differs:
-//   - Firefox: "menus" permission, background.scripts, gecko settings.
-//   - Chromium (Chrome, Edge): "contextMenus" permission,
-//     background.service_worker, minimum_chrome_version.
+// Builds dist/firefox and dist/chromium from the same code. Only manifest.json
+// differs: Firefox takes "menus" and background.scripts, Chromium takes
+// "contextMenus" and the service worker.
 // Usage: npm run build
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -25,12 +22,12 @@ function without(manifest, keys) {
 const targets = {
   firefox: {
     ...without(source, ['minimum_chrome_version']),
-    permissions: ['menus'],
+    permissions: source.permissions.filter((/** @type {string} */ name) => name !== 'contextMenus'),
     background: { scripts: source.background.scripts },
   },
   chromium: {
     ...without(source, ['browser_specific_settings']),
-    permissions: ['contextMenus'],
+    permissions: source.permissions.filter((/** @type {string} */ name) => name !== 'menus'),
     background: { service_worker: source.background.service_worker },
   },
 };
@@ -42,7 +39,7 @@ for (const [target, manifest] of Object.entries(targets)) {
   const targetDir = `${distDir}/${target}`;
   cpSync(sourceDir, targetDir, { recursive: true });
   writeFileSync(`${targetDir}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
-  const filename = `siret-form-filler-${target}-${source.version}.zip`;
+  const filename = `company-form-filler-${target}-${source.version}.zip`;
   execFileSync(
     process.execPath,
     [

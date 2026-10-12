@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Company Form Filler</title>
+    <link rel="stylesheet" href="../shared/theme.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <img src="../icons/icon-32.png" alt="" width="16" height="16" />
+      <span data-i18n="extName"></span>
+    </header>
+    <main class="content">
+      <p class="notice" id="private" hidden data-i18n="popupPrivate"></p>
+      <p class="error" id="storage-error" hidden data-i18n="storageError"></p>
+
+      <section class="preview" aria-live="polite">
+        <h1 class="preview-label" id="preview-label"></h1>
+        <div class="card" id="card"></div>
+      </section>
+
+      <div class="row">
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="generate-company"
+          data-i18n="popupGenerateCompany"
+        ></button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="generate-address"
+          data-i18n="popupGenerateAddress"
+        ></button>
+      </div>
+      <button type="button" class="btn wide" id="use-here" hidden data-i18n="popupUseHere"></button>
+      <button type="button" class="btn wide" id="open-viewer" data-i18n="popupOpenViewer"></button>
+    </main>
+    <footer class="foot">
+      <a id="report" target="_blank" rel="noopener noreferrer" data-i18n="popupReport"></a>
+    </footer>
+    <script src="../shared/format.js"></script>
+    <script src="../shared/page.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

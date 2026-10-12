@@ -1,0 +1,133 @@
+<!-- Third-party form of an Angular and PrimeNG ERP, reduced to its structure:
+     the address lives in its own form, in a tab, and both forms reuse id="name". -->
+<main>
+  <h1>Informations générales</h1>
+  <form novalidate>
+    <div class="grid">
+      <div class="col-span-8 flex">
+        <div class="mr-5">
+          <label for="code" class="required">Code</label>
+          <input pinputtext id="code" formcontrolname="code" name="code" class="p-inputtext" />
+        </div>
+        <div class="mr-5 w-full">
+          <label for="name" class="required">Libellé</label>
+          <input pinputtext id="name" formcontrolname="name" name="name" class="p-inputtext" />
+        </div>
+        <div>
+          <label for="color">Couleur</label>
+          <input
+            type="text"
+            readonly
+            class="p-colorpicker-preview"
+            aria-label="Sélectionnez une couleur"
+          />
+        </div>
+      </div>
+      <div class="col-span-5">
+        <label for="tierType" class="required">Type de tiers</label>
+        <div class="p-hidden-accessible">
+          <input role="combobox" id="tierType" aria-haspopup="listbox" value="empty" />
+        </div>
+      </div>
+      <div class="col-span-3">
+        <label for="individual">Particulier</label>
+        <input type="checkbox" role="switch" name="individual" />
+      </div>
+      <div class="col-span-4">
+        <label for="email">Adresse mail</label>
+        <input id="email" type="email" formcontrolname="email" placeholder="john.doe@mail.com" />
+      </div>
+      <div class="col-span-4">
+        <label for="phone">Téléphone fixe</label>
+        <input type="tel" id="phone" formcontrolname="phone" placeholder="+33 1 23 45 67 89" />
+      </div>
+      <div class="col-span-4">
+        <div class="grid">
+          <label for="siret">N° de SIRET</label>
+          <input id="siret" formcontrolname="siret" name="siret" />
+        </div>
+      </div>
+      <div class="col-span-4">
+        <label for="mobile">Téléphone portable</label>
+        <input type="tel" id="mobile" formcontrolname="mobile" placeholder="+33 6 12 34 56 78" />
+      </div>
+      <div class="col-span-4">
+        <div class="grid">
+          <label for="tvaIntracommunautaire">N° de TVA Intracommunautaire</label>
+          <input
+            id="tvaIntracommunautaire"
+            formcontrolname="tvaIntracommunautaire"
+            name="tvaIntracommunautaire"
+          />
+        </div>
+      </div>
+      <div class="col-span-8">
+        <label for="comment">Commentaire</label>
+        <textarea rows="5" id="comment" formcontrolname="comment" name="comment"></textarea>
+      </div>
+    </div>
+  </form>
+  <div class="p-tabs">
+    <div role="tablist"><span role="tab" aria-selected="true">Adresses</span></div>
+    <div role="tabpanel">
+      <p class="body-bold">Adresse</p>
+      <form novalidate class="grid">
+        <div class="col-span-12">
+          <label for="name" class="field-label">Libellé adresse</label>
+          <input id="name" formcontrolname="name" name="name" />
+        </div>
+        <div class="col-span-12">
+          <label for="address" class="field-label"><span>Adresse 1</span><span>**</span></label>
+          <input id="address" formcontrolname="address" name="address" />
+        </div>
+        <div class="col-span-12">
+          <label for="address2" class="field-label">Adresse 2</label>
+          <input id="address2" formcontrolname="address2" name="address2" />
+        </div>
+        <div class="col-span-12">
+          <label for="address3" class="field-label">Adresse 3</label>
+          <input id="address3" formcontrolname="address3" name="address3" />
+        </div>
+        <div class="col-span-4">
+          <label for="country" class="field-label"><span>Pays</span><span>**</span></label>
+          <app-country-select id="country">
+            <p-autocomplete>
+              <div class="p-autocomplete">
+                <input
+                  id="country-input"
+                  aria-autocomplete="list"
+                  role="combobox"
+                  type="text"
+                  autocomplete="off"
+                  name="undefined"
+                  value="France"
+                  placeholder="Choisir un pays"
+                />
+                <button type="button" class="p-autocomplete-dropdown"></button>
+              </div>
+            </p-autocomplete>
+          </app-country-select>
+        </div>
+        <div class="col-span-4">
+          <label for="postalCode" class="field-label"
+            ><span>Code Postal</span><span>**</span></label
+          >
+          <input id="postalCode" formcontrolname="postalCode" name="postalCode" />
+        </div>
+        <div class="col-span-4">
+          <label for="city" class="field-label">Ville</label>
+          <input id="city" formcontrolname="city" name="city" />
+        </div>
+        <div class="col-span-6">
+          <label for="latitude" class="field-label">Latitude</label>
+          <input id="latitude" name="latitude" />
+        </div>
+        <div class="col-span-6">
+          <label for="longitude" class="field-label">Longitude</label>
+          <input id="longitude" name="longitude" />
+        </div>
+      </form>
+      <p>Adresse de facturation <button type="submit">Afficher</button></p>
+    </div>
+  </div>
+</main>

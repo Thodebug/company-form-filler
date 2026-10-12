@@ -3,63 +3,72 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SIRET Form Filler : politique de confidentialité</title>
+    <title>Company Form Filler : politique de confidentialité</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="demo.css" />
   </head>
   <body>
     <header class="top">
-      <img src="favicon.svg" alt="" width="32" height="32" />
-      <h1>SIRET Form Filler</h1>
+      <img src="favicon.svg" alt="" width="28" height="28" />
+      <h1>Company Form Filler</h1>
       <span class="subtitle">Politique de confidentialité</span>
       <nav>
         <a href="index.html">Démonstration</a>
-        <a href="https://github.com/Thodebug/siret-form-filler">Code source</a>
+        <a href="https://github.com/Thodebug/company-form-filler">Code source</a>
       </nav>
     </header>
     <main class="doc">
-      <p>Dernière mise à jour : 8 octobre 2026 (version 1.0.1).</p>
+      <p>Dernière mise à jour : 12 octobre 2026 (version 2.0.0).</p>
 
-      <h2>Aucune donnée collectée</h2>
+      <h2>Aucune donnée collectée ni transmise</h2>
       <p>
-        SIRET Form Filler ne collecte, ne stocke et ne transmet aucune donnée. L'extension
-        n'effectue aucune requête réseau, n'utilise aucun stockage (ni local, ni synchronisé) et ne
-        contient ni statistiques d'usage, ni suivi, ni publicité.
+        Company Form Filler ne collecte et ne transmet aucune donnée. L'extension n'effectue aucune
+        requête réseau et ne contient ni statistiques d'usage, ni suivi, ni publicité.
+      </p>
+
+      <h2>Stockage local uniquement</h2>
+      <p>
+        L'extension conserve dans le stockage local de votre navigateur, sur votre appareil
+        uniquement et sans synchronisation : la dernière société générée, l'historique des 20
+        dernières sociétés, vos favoris et leurs étiquettes, les sections verrouillées de la fiche,
+        le thème choisi et le fait d'avoir fermé le guide de bienvenue. La société associée à chaque
+        onglet reste en mémoire pendant la session et n'est jamais écrite sur le disque. En
+        navigation privée, rien n'est écrit sur le disque. Le bouton « Tout effacer » de la fiche
+        supprime ces données, et la désinstallation les efface toutes.
+      </p>
+
+      <h2>Des données fictives</h2>
+      <p>
+        Les sociétés sont tirées au hasard dans votre navigateur. Raisons sociales, noms de rue,
+        banques et coordonnées sont fictifs ; les téléphones sont dans les plages réservées aux
+        œuvres de fiction et les emails utilisent le domaine réservé <code>example.com</code>. Les
+        communes sont réelles. Il n'existe pas de plage de SIREN réservée aux tests : un numéro
+        tiré, ou une combinaison de prénom et de nom, peut coïncider avec une entreprise ou une
+        personne réelle. Ces données ne doivent servir qu'à des tests.
       </p>
 
       <h2>Ce que fait l'extension sur les pages</h2>
       <p>
-        Lorsque vous faites un clic droit dans un champ de saisie, l'extension lit localement les
-        attributs et le libellé de ce seul champ (identifiant, nom, libellé, texte d'aide, longueur
-        attendue...), ainsi que jusqu'à 100 caractères du texte qui l'entoure, pour savoir s'il
-        attend un numéro SIRET ou SIREN. Cette analyse reste dans votre navigateur et n'est jamais
-        conservée. Le contenu saisi dans les champs n'est pas lu.
-      </p>
-      <p>
-        Quand vous choisissez « Générer un SIRET aléatoire » ou « Générer un SIREN aléatoire », un
-        numéro est tiré au hasard dans votre navigateur et écrit dans le champ. Rien d'autre n'est
-        modifié.
+        Lorsque vous faites un clic droit dans un champ, l'extension lit localement les attributs et
+        les libellés de ce champ et des champs de son formulaire (identifiant, nom, libellé, texte
+        d'aide, longueur attendue...), ainsi qu'au plus 100 caractères du texte qui entoure chacun,
+        pour reconnaître les champs à remplir. Quand vous choisissez de remplir, elle lit la valeur
+        actuelle des champs concernés pour pouvoir l'annuler, puis vérifie la valeur écrite. Ces
+        lectures restent dans la page, en mémoire, et ne sont ni conservées ni transmises.
       </p>
 
       <h2>Pourquoi l'accès à tous les sites</h2>
       <p>
-        Pour n'afficher l'entrée de menu que sur les champs reconnus, l'extension doit pouvoir
-        examiner le champ cliqué, quel que soit le site. C'est la seule raison de la permission «
-        accéder à vos données sur tous les sites ». Vous pouvez la retirer à tout moment dans le
-        gestionnaire de modules : l'entrée de menu n'apparaît alors plus.
-      </p>
-
-      <h2>Numéros générés</h2>
-      <p>
-        Les numéros sont fictifs mais valides (format et clé de contrôle). Il n'existe pas de plage
-        réservée aux numéros de test : un tirage peut coïncider avec une entreprise réelle. Ne les
-        utilisez que dans des environnements de test.
+        Pour proposer le menu sur n'importe quel formulaire, l'extension doit pouvoir examiner le
+        champ cliqué, quel que soit le site. C'est la seule raison de la permission « accéder à vos
+        données sur tous les sites ». Vous pouvez la retirer à tout moment dans le gestionnaire de
+        modules : le menu n'apparaît alors plus.
       </p>
 
       <h2>Contact</h2>
       <p>
         Pour toute question, ouvrez un ticket sur
-        <a href="https://github.com/Thodebug/siret-form-filler/issues">le dépôt GitHub</a>.
+        <a href="https://github.com/Thodebug/company-form-filler/issues">le dépôt GitHub</a>.
       </p>
     </main>
   </body>

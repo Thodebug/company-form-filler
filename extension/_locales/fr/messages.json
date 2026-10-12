@@ -1,18 +1,719 @@
 {
   "extName": {
-    "message": "SIRET Form Filler",
+    "message": "Company Form Filler",
     "description": "Nom de l'extension."
   },
   "extDescription": {
-    "message": "Clic droit sur un champ SIRET ou SIREN : insère un numéro fictif mais valide, pour tester vos formulaires.",
-    "description": "Description affichée dans le gestionnaire d'extensions."
+    "message": "Clic droit dans un formulaire : remplit une société ou une adresse française fictive et cohérente (SIRET, TVA, IBAN...).",
+    "description": "Description du gestionnaire d'extensions, 132 caractères au plus."
   },
-  "menuSiret": {
-    "message": "Générer un SIRET aléatoire",
-    "description": "Entrée du menu contextuel sur un champ SIRET."
+  "menuRoot": {
+    "message": "Company Form Filler",
+    "description": "Entrée parente du menu contextuel."
   },
-  "menuSiren": {
-    "message": "Générer un SIREN aléatoire",
-    "description": "Entrée du menu contextuel sur un champ SIREN."
+  "menuField": {
+    "message": "Remplir ce champ : $TYPE$",
+    "description": "Remplit le champ cliqué.",
+    "placeholders": {
+      "type": {
+        "content": "$1"
+      }
+    }
+  },
+  "menuFillCurrent": {
+    "message": "Remplir le formulaire avec la société en cours",
+    "description": "Remplit le formulaire avec la société de l'onglet."
+  },
+  "menuNewCompany": {
+    "message": "Nouvelle société et remplir",
+    "description": "Crée une société et remplit le formulaire."
+  },
+  "menuNewAddress": {
+    "message": "Nouvelle adresse et remplir",
+    "description": "Crée une société et remplit les champs d'adresse."
+  },
+  "menuUndo": {
+    "message": "Annuler le dernier remplissage",
+    "description": "Restaure les valeurs remplacées."
+  },
+  "bannerUndo": {
+    "message": "Annuler",
+    "description": "Lien du bandeau qui annule le remplissage."
+  },
+  "bannerFieldFilled": {
+    "message": "Champ rempli : $TYPE$",
+    "description": "Bandeau après un champ seul.",
+    "placeholders": {
+      "type": {
+        "content": "$1"
+      }
+    }
+  },
+  "bannerFieldSkipped": {
+    "message": "Champ ignoré : aucune valeur ne convient",
+    "description": "Bandeau quand le champ refuse la valeur."
+  },
+  "bannerNotRecognized": {
+    "message": "Champ non reconnu",
+    "description": "Bandeau quand l'action ne s'applique plus."
+  },
+  "bannerOneFilled": {
+    "message": "1 champ rempli",
+    "description": "Bandeau."
+  },
+  "bannerManyFilled": {
+    "message": "$COUNT$ champs remplis",
+    "description": "Bandeau.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "bannerOneSkipped": {
+    "message": "1 ignoré",
+    "description": "Bandeau, suite."
+  },
+  "bannerManySkipped": {
+    "message": "$COUNT$ ignorés",
+    "description": "Bandeau, suite.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "bannerOneRestored": {
+    "message": "1 champ restauré",
+    "description": "Bandeau après annulation."
+  },
+  "bannerManyRestored": {
+    "message": "$COUNT$ champs restaurés",
+    "description": "Bandeau après annulation.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "type_legalName": {
+    "message": "Raison sociale",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_tradeName": {
+    "message": "Enseigne",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_legalForm": {
+    "message": "Forme juridique",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_siren": {
+    "message": "SIREN",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_siret": {
+    "message": "SIRET",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_nic": {
+    "message": "NIC",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_vat": {
+    "message": "N° TVA",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_rcs": {
+    "message": "RCS",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_naf": {
+    "message": "Code NAF",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_capital": {
+    "message": "Capital",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_headcount": {
+    "message": "Effectif",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_creationDate": {
+    "message": "Date de création",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_iban": {
+    "message": "IBAN",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_bic": {
+    "message": "BIC",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_gln": {
+    "message": "GLN",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_erpCompanyCode": {
+    "message": "Code société",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_addressLabel": {
+    "message": "Libellé d'adresse",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_fullAddress": {
+    "message": "Adresse complète",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_addressLine1": {
+    "message": "Adresse",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_addressLine2": {
+    "message": "Complément d'adresse",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_streetNumber": {
+    "message": "Numéro de voie",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_street": {
+    "message": "Voie",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_postalCode": {
+    "message": "Code postal",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_city": {
+    "message": "Ville",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_department": {
+    "message": "Département",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_region": {
+    "message": "Région",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_country": {
+    "message": "Pays",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_latitude": {
+    "message": "Latitude",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_longitude": {
+    "message": "Longitude",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_mobile": {
+    "message": "Mobile",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_phone": {
+    "message": "Téléphone",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_email": {
+    "message": "Email",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_managerEmail": {
+    "message": "Email du dirigeant",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_website": {
+    "message": "Site web",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_title": {
+    "message": "Civilité",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_firstName": {
+    "message": "Prénom",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_fullName": {
+    "message": "Nom complet",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_lastName": {
+    "message": "Nom",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_role": {
+    "message": "Fonction",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_bankName": {
+    "message": "Banque",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_erpSiteCode": {
+    "message": "Code établissement",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_internalRef": {
+    "message": "Référence interne",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "type_uuid": {
+    "message": "UUID",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
+  "popupTabCompany": {
+    "message": "Société de cet onglet",
+    "description": "Popup."
+  },
+  "popupLastCompany": {
+    "message": "Dernière société",
+    "description": "Popup."
+  },
+  "popupNoCompany": {
+    "message": "Aucune société",
+    "description": "Popup, état vide."
+  },
+  "popupHelp": {
+    "message": "Générez une société ici, ou faites un clic droit dans un formulaire.",
+    "description": "Popup, état vide."
+  },
+  "popupGenerateCompany": {
+    "message": "Société fictive",
+    "description": "Bouton du popup."
+  },
+  "popupGenerateAddress": {
+    "message": "Adresse fictive",
+    "description": "Bouton du popup."
+  },
+  "popupUseHere": {
+    "message": "Utiliser dans cet onglet",
+    "description": "Bouton du popup."
+  },
+  "popupOpenViewer": {
+    "message": "Ouvrir la fiche",
+    "description": "Bouton du popup."
+  },
+  "popupReport": {
+    "message": "Signaler un problème",
+    "description": "Lien du popup."
+  },
+  "popupPrivate": {
+    "message": "Fenêtre privée : rien n'est enregistré",
+    "description": "Popup en navigation privée."
+  },
+  "storageError": {
+    "message": "Stockage indisponible : les données ne seront pas conservées",
+    "description": "Erreur de stockage."
+  },
+  "viewerTitle": {
+    "message": "Fiche société",
+    "description": "Titre de la page de consultation."
+  },
+  "viewerNew": {
+    "message": "Nouvelle société",
+    "description": "Bouton de la fiche."
+  },
+  "viewerFavoriteAdd": {
+    "message": "Ajouter aux favoris",
+    "description": "Bouton de la fiche."
+  },
+  "viewerFavoriteRemove": {
+    "message": "Retirer des favoris",
+    "description": "Bouton de la fiche."
+  },
+  "viewerFavoritesFull": {
+    "message": "100 favoris maximum",
+    "description": "Message quand les favoris sont pleins."
+  },
+  "viewerWarning": {
+    "message": "Données fictives. Un numéro généré peut correspondre à une entité réelle.",
+    "description": "Avertissement permanent."
+  },
+  "viewerCopied": {
+    "message": "Copié",
+    "description": "Retour après copie."
+  },
+  "viewerCopyHint": {
+    "message": "Cliquer pour copier",
+    "description": "Infobulle d'une valeur."
+  },
+  "viewerLock": {
+    "message": "Verrouiller la section",
+    "description": "Bouton de verrou."
+  },
+  "viewerUnlock": {
+    "message": "Déverrouiller la section",
+    "description": "Bouton de verrou."
+  },
+  "viewerLockHint": {
+    "message": "Une section verrouillée est conservée par « Nouvelle société ».",
+    "description": "Aide des verrous."
+  },
+  "viewerEmpty": {
+    "message": "Aucune société. Cliquez sur « Nouvelle société ».",
+    "description": "Fiche vide."
+  },
+  "viewerHistory": {
+    "message": "Historique",
+    "description": "Titre du panneau."
+  },
+  "viewerFavorites": {
+    "message": "Favoris",
+    "description": "Titre du panneau."
+  },
+  "viewerUse": {
+    "message": "Utiliser",
+    "description": "Action sur une entrée."
+  },
+  "viewerUseHint": {
+    "message": "Afficher et utiliser dans le dernier onglet consulté",
+    "description": "Infobulle de l'action Utiliser."
+  },
+  "viewerDelete": {
+    "message": "Supprimer",
+    "description": "Action sur une entrée."
+  },
+  "viewerLabelPlaceholder": {
+    "message": "Étiquette (facultatif)",
+    "description": "Champ d'étiquette d'un favori."
+  },
+  "viewerEmptyHistory": {
+    "message": "Aucune société dans l'historique.",
+    "description": "Historique vide."
+  },
+  "viewerEmptyFavorites": {
+    "message": "Aucun favori.",
+    "description": "Favoris vides."
+  },
+  "viewerClearHistory": {
+    "message": "Vider l'historique",
+    "description": "Bouton."
+  },
+  "viewerClearAll": {
+    "message": "Tout effacer",
+    "description": "Bouton."
+  },
+  "viewerConfirmClearAll": {
+    "message": "Effacer la dernière société, l'historique, les favoris et les verrous ?",
+    "description": "Confirmation."
+  },
+  "viewerConfirm": {
+    "message": "Effacer",
+    "description": "Bouton de confirmation."
+  },
+  "viewerCancel": {
+    "message": "Annuler",
+    "description": "Bouton d'annulation."
+  },
+  "viewerCurrent": {
+    "message": "Affichée",
+    "description": "Marque de la société affichée dans l'historique."
+  },
+  "themeSystem": {
+    "message": "Thème : système",
+    "description": "Bouton de thème."
+  },
+  "themeLight": {
+    "message": "Thème : clair",
+    "description": "Bouton de thème."
+  },
+  "themeDark": {
+    "message": "Thème : sombre",
+    "description": "Bouton de thème."
+  },
+  "onboardingTitle": {
+    "message": "Bienvenue dans Company Form Filler",
+    "description": "Encart de premier lancement."
+  },
+  "onboarding1": {
+    "message": "Clic droit dans un formulaire : le sous-menu Company Form Filler remplit un champ ou tout le formulaire.",
+    "description": "Encart."
+  },
+  "onboarding2": {
+    "message": "Le bouton de l'extension génère une société ou une adresse et ouvre cette fiche.",
+    "description": "Encart."
+  },
+  "onboarding3": {
+    "message": "Cette fiche montre la dernière société : cliquez une valeur pour la copier, verrouillez une section pour la garder.",
+    "description": "Encart."
+  },
+  "onboardingClose": {
+    "message": "Compris",
+    "description": "Ferme l'encart."
+  },
+  "group_identity": {
+    "message": "Identité",
+    "description": "Section de la fiche."
+  },
+  "group_tax": {
+    "message": "Fiscal et activité",
+    "description": "Section de la fiche."
+  },
+  "group_address": {
+    "message": "Adresse",
+    "description": "Section de la fiche."
+  },
+  "group_contact": {
+    "message": "Contact",
+    "description": "Section de la fiche."
+  },
+  "group_manager": {
+    "message": "Dirigeant",
+    "description": "Section de la fiche."
+  },
+  "group_bank": {
+    "message": "Banque",
+    "description": "Section de la fiche."
+  },
+  "group_accounting": {
+    "message": "Comptabilité et conditions",
+    "description": "Section de la fiche."
+  },
+  "group_erp": {
+    "message": "ERP et références",
+    "description": "Section de la fiche."
+  },
+  "field_identity_legalName": {
+    "message": "Raison sociale",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_legalNameShort": {
+    "message": "Raison sociale courte",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_tradeName": {
+    "message": "Enseigne",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_legalForm": {
+    "message": "Forme juridique",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_siren": {
+    "message": "SIREN",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_nic": {
+    "message": "NIC",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_siret": {
+    "message": "SIRET",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_creationDate": {
+    "message": "Date de création",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_identity_rcs": {
+    "message": "RCS",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_vatNumber": {
+    "message": "TVA intracommunautaire",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_nafCode": {
+    "message": "Code NAF 2025",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_nafLabel": {
+    "message": "Activité (NAF 2025)",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_nafCodeRev2": {
+    "message": "Code NAF rév. 2",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_nafLabelRev2": {
+    "message": "Activité (NAF rév. 2)",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_shareCapital": {
+    "message": "Capital social",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_headcountBand": {
+    "message": "Effectif",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_vatRegime": {
+    "message": "Régime de TVA",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_tax_vatCode": {
+    "message": "Code TVA",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_line1": {
+    "message": "Adresse",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_line2": {
+    "message": "Complément",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_postalCode": {
+    "message": "Code postal",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_city": {
+    "message": "Ville",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_inseeCode": {
+    "message": "Code INSEE",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_departmentName": {
+    "message": "Département",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_region": {
+    "message": "Région",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_countryName": {
+    "message": "Pays",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_latitude": {
+    "message": "Latitude",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_address_longitude": {
+    "message": "Longitude",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_contact_phone": {
+    "message": "Téléphone",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_contact_email": {
+    "message": "Email",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_contact_website": {
+    "message": "Site web",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_title": {
+    "message": "Civilité",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_firstName": {
+    "message": "Prénom",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_lastName": {
+    "message": "Nom",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_role": {
+    "message": "Fonction",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_mobile": {
+    "message": "Mobile",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_manager_email": {
+    "message": "Email",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_bankName": {
+    "message": "Banque",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_bankCode": {
+    "message": "Code banque",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_branchCode": {
+    "message": "Code guichet",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_accountNumber": {
+    "message": "Numéro de compte",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_ribKey": {
+    "message": "Clé RIB",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_iban": {
+    "message": "IBAN",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_bank_bic": {
+    "message": "BIC",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_customerCode": {
+    "message": "Code client",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_supplierCode": {
+    "message": "Code fournisseur",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_customerAccount": {
+    "message": "Compte client",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_supplierAccount": {
+    "message": "Compte fournisseur",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_auxiliaryAccount": {
+    "message": "Compte auxiliaire",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_paymentMethod": {
+    "message": "Mode de règlement",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_paymentTerms": {
+    "message": "Délai de paiement",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_currency": {
+    "message": "Devise",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_accounting_creditLimit": {
+    "message": "Encours autorisé",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_erp_erpCompanyCode": {
+    "message": "Code société ERP",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_erp_erpSiteCode": {
+    "message": "Code établissement ERP",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_erp_gln": {
+    "message": "GLN",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_erp_internalRef": {
+    "message": "Référence interne",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "field_erp_uuid": {
+    "message": "UUID",
+    "description": "Libellé d'une valeur de la fiche."
+  },
+  "viewerNoCapital": {
+    "message": "Sans capital",
+    "description": "Capital d'une entreprise individuelle."
   }
 }
