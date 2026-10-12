@@ -20,7 +20,7 @@ Anciennement **SIRET Form Filler** (v1), qui ne générait que des SIRET et SIRE
   - « Nouvelle société et remplir », ou « Nouvelle adresse et remplir » sur un formulaire
     d'adresse ;
   - « Annuler le dernier remplissage ».
-- **Détection** de 41 types de champs, en français et en anglais. Un formulaire découpé en
+- **Détection** de 42 types de champs, en français et en anglais. Un formulaire découpé en
   sections est rempli en entier ; des blocs répétés (facturation et livraison) ne le sont que
   pour le bloc cliqué. Les champs génériques (email, téléphone, nom) ne déclenchent jamais le
   menu à eux seuls.

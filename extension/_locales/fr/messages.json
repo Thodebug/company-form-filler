@@ -160,6 +160,10 @@
     "message": "Code société",
     "description": "Type de champ, dans le menu et le bandeau."
   },
+  "type_addressLabel": {
+    "message": "Libellé d'adresse",
+    "description": "Type de champ, dans le menu et le bandeau."
+  },
   "type_fullAddress": {
     "message": "Adresse complète",
     "description": "Type de champ, dans le menu et le bandeau."

@@ -32,6 +32,7 @@ const CffDetection = (() => {
   /** Bounds the walk on very large pages. */
   const MAX_NODES = 2000;
   const MAX_SHADOW_DEPTH = 16;
+  const MAX_COMPANION_FORMS = 10;
 
   const STRONG_ATTRIBUTES = [
     'id',
@@ -275,8 +276,17 @@ const CffDetection = (() => {
      *   nothing about whose value the field holds.
      */
     const add = (text, weight, placeholder = false) => {
-      if (text && text.trim()) {
-        sources.push({ text: normalize(text), weight, placeholder });
+      if (!text || !text.trim()) {
+        return;
+      }
+      const normalized = normalize(text);
+      // id, name and formcontrolname often repeat one word: it counts once.
+      const same = sources.find((source) => source.text === normalized);
+      if (same) {
+        same.weight = Math.max(same.weight, weight);
+        same.placeholder &&= placeholder;
+      } else {
+        sources.push({ text: normalized, weight, placeholder });
       }
     };
     /**
@@ -472,12 +482,18 @@ const CffDetection = (() => {
   }
 
   /**
-   * @typedef {{ definition: CffFieldType, keyword: RegExp, blocker: RegExp | null }} Matcher
+   * @typedef {{
+   *   definition: CffFieldType,
+   *   keyword: RegExp,
+   *   blockKeyword: RegExp | null,
+   *   blocker: RegExp | null,
+   * }} Matcher
+   * @typedef {{ always: Set<number>, inBlock: Set<number> }} Mentions
    */
 
   /** @type {Matcher[] | null} */
   let matcherCache = null;
-  /** @type {Map<string, Set<number>>} */
+  /** @type {Map<string, Mentions>} */
   const matchCache = new Map();
   const MATCH_CACHE_SIZE = 1000;
 
@@ -488,15 +504,17 @@ const CffDetection = (() => {
    * @returns {Matcher[]}
    */
   function matchers() {
-    /** @param {RegExp[]} patterns */
+    /** @param {RegExp[] | undefined} patterns */
     const anyOf = (patterns) =>
-      new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'));
+      patterns && patterns.length
+        ? new RegExp(patterns.map((pattern) => `(?:${pattern.source})`).join('|'))
+        : null;
     if (!matcherCache) {
       matcherCache = CffVocab.TYPES.map((definition) => ({
         definition,
-        keyword: anyOf(definition.keywords),
-        blocker:
-          definition.blockers && definition.blockers.length ? anyOf(definition.blockers) : null,
+        keyword: /** @type {RegExp} */ (anyOf(definition.keywords)),
+        blockKeyword: anyOf(definition.blockKeywords),
+        blocker: anyOf(definition.blockers),
       }));
     }
     return matcherCache;
@@ -506,17 +524,24 @@ const CffDetection = (() => {
    * Cached because most clues repeat from one control to the next (classes,
    * data attributes, column titles).
    * @param {string} text
-   * @returns {Set<number>} Indexes in CffVocab.TYPES.
+   * @returns {Mentions} Indexes in CffVocab.TYPES.
    */
   function typesMentionedIn(text) {
     let found = matchCache.get(text);
     if (!found) {
-      found = new Set();
-      matchers().forEach(({ keyword, blocker }, index) => {
-        if (keyword.test(text) && !(blocker && blocker.test(text))) {
-          /** @type {Set<number>} */ (found).add(index);
+      /** @type {Mentions} */
+      const mentions = { always: new Set(), inBlock: new Set() };
+      matchers().forEach(({ keyword, blockKeyword, blocker }, index) => {
+        if (blocker && blocker.test(text)) {
+          return;
+        }
+        if (keyword.test(text)) {
+          mentions.always.add(index);
+        } else if (blockKeyword && blockKeyword.test(text)) {
+          mentions.inBlock.add(index);
         }
       });
+      found = mentions;
       if (matchCache.size >= MATCH_CACHE_SIZE) {
         matchCache.clear();
       }
@@ -551,23 +576,61 @@ const CffDetection = (() => {
 
   /**
    * @param {Element | null | undefined} element
+   * @param {{ inBlock?: boolean }} [options] inBlock: the field belongs to a
+   *   qualified block, where vague labels such as "Code" can be trusted.
    * @returns {TypeDetection}
    */
-  function detectType(element) {
-    /** @type {TypeDetection} */
-    const result = { type: null, category: null, scores: {} };
+  function detectType(element, options = {}) {
     if (!isEligible(element)) {
-      return result;
+      return { type: null, category: null, scores: {} };
     }
-    const field = element;
+    return decide(cluesOf(element), Boolean(options.inBlock));
+  }
+
+  /**
+   * @typedef {{
+   *   field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+   *   sources: Source[],
+   *   mentions: Mentions[],
+   *   hints: Map<string, Hint>,
+   *   autocomplete: string[],
+   *   inputType: string,
+   * }} Clues
+   */
+
+  /**
+   * @param {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} field
+   * @returns {Clues}
+   */
+  function cluesOf(field) {
     const wrappers = ownWrappers(field);
     const sources = collectSources(field, wrappers);
-    const hints = shapeHints(field, wrappers);
-    const autocomplete = (field.getAttribute('autocomplete') || '').toLowerCase().split(/\s+/);
-    const inputType =
-      field.localName === 'input' ? /** @type {HTMLInputElement} */ (field).type : '';
+    return {
+      field,
+      sources,
+      mentions: sources.map((source) => typesMentionedIn(source.text)),
+      hints: shapeHints(field, wrappers),
+      autocomplete: (field.getAttribute('autocomplete') || '').toLowerCase().split(/\s+/),
+      inputType: field.localName === 'input' ? /** @type {HTMLInputElement} */ (field).type : '',
+    };
+  }
 
-    const mentions = sources.map((source) => typesMentionedIn(source.text));
+  /**
+   * @param {Clues} clues
+   * @returns {boolean}
+   */
+  function hasBlockMentions(clues) {
+    return clues.mentions.some((mentions) => mentions.inBlock.size > 0);
+  }
+
+  /**
+   * @param {Clues} clues
+   * @param {boolean} inBlock
+   * @returns {TypeDetection}
+   */
+  function decide({ field, sources, mentions, hints, autocomplete, inputType }, inBlock) {
+    /** @type {TypeDetection} */
+    const result = { type: null, category: null, scores: {} };
     /** @type {{ id: string, score: number, order: number }[]} */
     const candidates = [];
     CffVocab.TYPES.forEach((definition, order) => {
@@ -577,7 +640,7 @@ const CffDetection = (() => {
       let score = 0;
       let evidence = false;
       sources.forEach((source, index) => {
-        if (mentions[index].has(order)) {
+        if (mentions[index].always.has(order) || (inBlock && mentions[index].inBlock.has(order))) {
           score += source.weight;
           evidence = true;
         }
@@ -605,12 +668,40 @@ const CffDetection = (() => {
       return result;
     }
     candidates.sort((a, b) => b.score - a.score || a.order - b.order);
-    let type = candidates[0].id;
-    type = refineType(field, type, sources);
+    const type = refineType(field, candidates[0].id, sources);
     result.type = type;
     const definition = CffVocab.BY_ID.get(type);
     result.category = definition ? definition.category : null;
     return result;
+  }
+
+  /**
+   * Visibility and clues of each control, computed once per search.
+   */
+  function createInspector() {
+    /** @type {Map<Element, { clues: Clues | null, plain: string | null }>} */
+    const seen = new Map();
+    /** @param {Element} control */
+    const entryOf = (control) => {
+      let entry = seen.get(control);
+      if (!entry) {
+        const clues = isEligible(control) && isVisible(control) ? cluesOf(control) : null;
+        entry = { clues, plain: clues ? decide(clues, false).type : null };
+        seen.set(control, entry);
+      }
+      return entry;
+    };
+    return {
+      /**
+       * @param {Element} control
+       * @param {boolean} [inBlock]
+       * @returns {string | null} Null for hidden or unrecognized controls.
+       */
+      typeOf(control, inBlock = false) {
+        const { clues, plain } = entryOf(control);
+        return inBlock && clues && hasBlockMentions(clues) ? decide(clues, true).type : plain;
+      },
+    };
   }
 
   /**
@@ -698,15 +789,9 @@ const CffDetection = (() => {
     if (!element || element.nodeType !== 1) {
       return null;
     }
-    /** @type {Map<Element, string | null>} */
-    const typeCache = new Map();
+    const inspector = createInspector();
     /** @param {Element} control */
-    const typeOf = (control) => {
-      if (!typeCache.has(control)) {
-        typeCache.set(control, isVisible(control) ? detectType(control).type : null);
-      }
-      return /** @type {string | null} */ (typeCache.get(control));
-    };
+    const typeOf = (control) => inspector.typeOf(control);
     /** @param {Element[]} controls */
     const typesOf = (controls) => new Set(controls.map(typeOf).filter((type) => type !== null));
 
@@ -769,14 +854,72 @@ const CffDetection = (() => {
       types = new Set([...types, ...newTypes]);
     }
 
+    const qualification = qualify(types);
     return {
       root: block,
-      qualification: qualify(types),
-      fields: controls
-        .map((control) => ({ element: control, type: typeOf(control) }))
-        .filter((/** @type {{ type: string | null }} */ field) => field.type !== null)
-        .map((field) => /** @type {TypedField} */ (field)),
+      qualification,
+      fields: typedFields(controls, inspector, qualification !== null),
     };
+  }
+
+  /**
+   * @param {Element[]} controls
+   * @param {ReturnType<typeof createInspector>} inspector
+   * @param {boolean} inBlock
+   * @returns {TypedField[]}
+   */
+  function typedFields(controls, inspector, inBlock) {
+    /** @type {TypedField[]} */
+    const fields = [];
+    for (const control of controls) {
+      const type = inspector.typeOf(control, inBlock);
+      if (type !== null) {
+        fields.push({ element: control, type });
+      }
+    }
+    return fields;
+  }
+
+  /**
+   * The address of a company form may live in a form of its own (a tab, a
+   * separate component). Only the first address form found from the nearest
+   * ancestor is taken, so that billing and shipping are never both filled.
+   * Called on fill only, never for the menu verdict.
+   * @param {Block} block
+   * @returns {TypedField[]}
+   */
+  function companionAddress(block) {
+    if (
+      block.qualification !== 'company' ||
+      block.fields.some((field) => categoryOf(field.type) === 'address')
+    ) {
+      return [];
+    }
+    const inspector = createInspector();
+    /** @type {Set<Element>} */
+    const checked = new Set();
+    for (let current = composedParent(block.root); current; current = composedParent(current)) {
+      for (const form of current.querySelectorAll('form')) {
+        if (checked.has(form) || form.contains(block.root) || block.root.contains(form)) {
+          continue;
+        }
+        if (checked.size >= MAX_COMPANION_FORMS) {
+          return [];
+        }
+        checked.add(form);
+        const controls = collectControls(form) || [];
+        const types = new Set(typedFields(controls, inspector, false).map((field) => field.type));
+        if (qualify(types) === 'address') {
+          return typedFields(controls, inspector, true).filter(
+            (field) => categoryOf(field.type) === 'address',
+          );
+        }
+      }
+      if (current.localName === 'body') {
+        break;
+      }
+    }
+    return [];
   }
 
   /**
@@ -804,5 +947,6 @@ const CffDetection = (() => {
     detectType,
     categoryOf,
     findBlock,
+    companionAddress,
   };
 })();

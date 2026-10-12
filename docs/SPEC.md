@@ -278,15 +278,16 @@ Ces données sont détectées dans les formulaires.
 Une table déclarative (`vocab/fr.js`) décrit chaque type : mots-clés FR et EN,
 mots bloquants, jetons `autocomplete` HTML, indices de forme, libellé de menu, formats.
 
-| Catégorie                                    | Types                                                                                                                                                  |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Forts société** (qualifient un formulaire) | raison sociale, enseigne, forme juridique, SIREN, SIRET, NIC, TVA, NAF/APE, capital, RCS, effectif, date de création, IBAN, BIC, GLN, code société ERP |
-| **Adresse**                                  | ligne 1, complément, numéro, voie, code postal, ville, département, région, pays, adresse complète, latitude, longitude                                |
-| **Génériques** (ne qualifient jamais seuls)  | téléphone, mobile, email, site web, civilité, prénom, nom, nom complet, fonction, nom de banque, référence interne, UUID, code établissement ERP       |
+| Catégorie                                    | Types                                                                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Forts société** (qualifient un formulaire) | raison sociale, enseigne, forme juridique, SIREN, SIRET, NIC, TVA, NAF/APE, capital, RCS, effectif, date de création, IBAN, BIC, GLN, code société ERP        |
+| **Adresse**                                  | libellé d'adresse (« Siège social »), ligne 1, complément, numéro, voie, code postal, ville, département, région, pays, adresse complète, latitude, longitude |
+| **Génériques** (ne qualifient jamais seuls)  | téléphone, mobile, email, site web, civilité, prénom, nom, nom complet, fonction, nom de banque, référence interne, UUID, code établissement ERP              |
 
-**Moteur** : le scoring de la v1 est généralisé à N types.
+**Moteur** : chaque indice du champ ajoute son poids aux types qu'il cite.
 
-- Les poids sont ceux de la v1.
+- Un même texte porté par plusieurs attributs (`id`, `name` et `formcontrolname` valant
+  `name`) ne compte qu'une fois.
 - `autocomplete` vaut **3** quand sa valeur est un jeton HTML standard connu.
 - Un mot-clé est obligatoire, sauf pour un jeton `autocomplete` standard.
 - Le score minimum est 3.
@@ -296,7 +297,12 @@ mots bloquants, jetons `autocomplete` HTML, indices de forme, libellé de menu, 
   - « adresse email » ou « adresse mail » donne email ;
   - « nom » suivi de société ou entreprise donne raison sociale ;
   - « nom d'utilisateur » est bloquant ;
-  - « code » seul ne qualifie rien.
+  - « code » seul ne qualifie rien ;
+  - « Adresse 3 » et au-delà ne sont pas reconnus et restent vides.
+- **Libellés vagues** : « Code » (ou « Code tiers ») et « Libellé », « Intitulé »,
+  « Désignation » seuls donnent le code société ERP et la raison sociale, mais seulement
+  dans un bloc déjà qualifié. Ils ne comptent pas pour la qualification et ne font jamais
+  apparaître le menu à eux seuls (un code de validation, par exemple).
 
 **Société ou dirigeant pour un générique** : un champ email ou téléphone reçoit par défaut la
 valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle du **dirigeant**
@@ -326,10 +332,15 @@ valeur de la **société** (`contact.email`, `contact.phone`). Il reçoit celle 
 4. **Qualification « adresse »** : sinon, le bloc contient au moins 3 types **adresse**
    distincts, dont code postal et ville.
 5. **Sinon** : aucun bloc qualifié.
-6. **Doublons** dans le bloc final (par exemple email et confirmation d'email) : même valeur.
-7. Le comptage traverse les shadow roots ouverts et fermés. Il s'arrête au bout
+6. **Adresse dans un autre formulaire** : au remplissage d'un bloc société sans champ
+   d'adresse, le premier formulaire qualifié « adresse » trouvé en remontant depuis le bloc
+   est rempli aussi (adresse dans un onglet ou un composant séparé). Un seul formulaire
+   est pris, pour ne jamais remplir facturation et livraison ensemble. Ce calcul n'a lieu
+   qu'au remplissage, pas pour le menu.
+7. **Doublons** dans le bloc final (par exemple email et confirmation d'email) : même valeur.
+8. Le comptage traverse les shadow roots ouverts et fermés. Il s'arrête au bout
    de **2 000 nœuds** parcourus ; au-delà, le verdict de bloc est négatif.
-8. Les frames sont traitées une par une. Un formulaire réparti sur plusieurs iframes n'est
+9. Les frames sont traitées une par une. Un formulaire réparti sur plusieurs iframes n'est
    pas vu entier : c'est une limite documentée.
 
 ### 3.4 Moment du calcul
@@ -408,6 +419,9 @@ sous-entrées conditionnelles. L'entrée parente est masquée quand aucune ne s'
 
 - **Écrasement** : tout champ reconnu du bloc est écrasé, même s'il est déjà rempli. Les
   valeurs vides ou nulles ne sont jamais écrites (§2.1).
+- **Valeur déjà en place** : un champ texte qui contient déjà la valeur à écrire n'est pas
+  touché (ni focus ni évènement) et compte comme rempli. Une autocomplétion déjà réglée
+  (pays prérempli à « France ») n'ouvre donc pas ses suggestions.
 - **Ordre** :
   1. pays, région, département, code postal, ville ;
   2. les autres champs, dans l'ordre du DOM ;

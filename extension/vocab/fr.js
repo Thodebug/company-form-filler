@@ -113,6 +113,7 @@ const CffVocab = (() => {
       id: 'erpCompanyCode',
       category: 'strong',
       keywords: [/\bcode (societe|entreprise|entite|erp)\b/, /\bcompany code\b/, /\berp code\b/],
+      blockKeywords: [/^code( tiers)?$/],
     },
     {
       id: 'tradeName',
@@ -135,8 +136,14 @@ const CffVocab = (() => {
         /\b(company|organi[sz]ation|business|legal|corporate) name\b/,
         /\b(societe|entreprise|organisation|organisme|company|organi[sz]ation)\b/,
       ],
+      blockKeywords: [/^(libelle|intitule|designation)$/],
       blockers: [NOT_COMPANY_NAME, /\bcommercial\b/],
       autocomplete: ['organization'],
+    },
+    {
+      id: 'addressLabel',
+      category: 'address',
+      keywords: [/\b(libelle|intitule|nom) (de l |d )?adresse\b/, /\baddress (label|name|title)\b/],
     },
     {
       id: 'fullAddress',
@@ -238,6 +245,8 @@ const CffVocab = (() => {
       blockers: [
         /\b(e ?mail|mail|courriel|electronique|ip|web|url|site|ville|city|pays|country|code postal|postal|zip)\b/,
         /\b(nom (de la )?(rue|voie)|libelle|numero|n voie|street (name|number))\b/,
+        // Third lines and beyond are left empty rather than given line 1.
+        /\b(adresse|address|ligne|line) ?[3-9]\b/,
       ],
       autocomplete: ['address-line1'],
     },

@@ -154,10 +154,10 @@ const CffFill = (() => {
     const control = /** @type {Control} */ (field.element);
     const previous = currentValue(control);
     const hints = CffFormat.hintsOf(control);
-    control.focus({ preventScroll: true });
 
     if (control.localName === 'select') {
       const select = /** @type {HTMLSelectElement} */ (control);
+      select.focus({ preventScroll: true });
       const candidates = CffFormat.optionCandidates(field.type, company).filter(Boolean);
       if (candidates.length === 0) {
         return { status: 'empty', previous, written: previous };
@@ -181,6 +181,12 @@ const CffFill = (() => {
     if (value === null) {
       return { status: 'skipped', previous, written: previous };
     }
+    // Left untouched: rewriting would open the suggestions of an autocomplete
+    // that already holds its value (a country preset to France).
+    if (compact(previous) === compact(value)) {
+      return { status: 'filled', previous, written: previous };
+    }
+    text.focus({ preventScroll: true });
     if (!writeText(text, value)) {
       text.value = previous;
       dispatch(text, ['input', 'change']);

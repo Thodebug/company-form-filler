@@ -169,6 +169,8 @@ interface CffFieldType {
   id: string;
   category: 'strong' | 'address' | 'generic';
   keywords: RegExp[];
+  /** Only inside a qualified block: too vague on their own ("Code", "Libellé"). */
+  blockKeywords?: RegExp[];
   blockers?: RegExp[];
   autocomplete?: string[];
   inputTypes?: string[];

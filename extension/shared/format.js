@@ -181,6 +181,8 @@ const CffFormat = (() => {
         return [erp.internalRef];
       case 'uuid':
         return [erp.uuid];
+      case 'addressLabel':
+        return ['Siège social'];
       case 'addressLine1':
         return [address.line1, address.line1Short];
       case 'addressLine2':

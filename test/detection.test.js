@@ -349,3 +349,65 @@ describe('isVisible', () => {
     assert.equal(detection.isVisible(window.document.getElementById('h')), false);
   });
 });
+
+describe('third-party form with its address in another form', () => {
+  const html = readProjectFile('test/fixtures/third-party.html');
+
+  function setup() {
+    const { window, get } = loadPage(html);
+    const detection = get('CffDetection');
+    const document = window.document;
+    const [name, addressName] = Array.from(document.querySelectorAll('input[name="name"]'));
+    /** @param {string} id */
+    const byId = (id) => /** @type {Element} */ (document.getElementById(id));
+    /** @param {{ element: Element, type: string }[]} fields */
+    const typesOf = (fields) =>
+      Object.fromEntries(
+        fields.map((field) => [field.element.id || field.element.getAttribute('name'), field.type]),
+      );
+    return { detection, name, addressName, byId, typesOf };
+  }
+
+  it('trusts the vague labels "Code" and "Libellé" only inside a company block', () => {
+    const { detection, name, byId, typesOf } = setup();
+    assert.equal(detection.detectType(byId('code')).type, null, 'no menu on a lone "Code" field');
+    const block = detection.findBlock(byId('siret'));
+    assert.equal(block?.qualification, 'company');
+    const types = typesOf(block.fields);
+    assert.equal(types.code, 'erpCompanyCode');
+    assert.equal(block.fields.find((field) => field.element === name)?.type, 'legalName');
+    assert.equal(types.email, 'email');
+    assert.equal(types.phone, 'phone');
+    assert.equal(types.mobile, 'mobile');
+    assert.equal(types.tvaIntracommunautaire, 'vat');
+  });
+
+  it('adds the address form next to the company form', () => {
+    const { detection, addressName, byId, typesOf } = setup();
+    const block = detection.findBlock(byId('siret'));
+    const address = detection.companionAddress(block);
+    assert.equal(address.find((field) => field.element === addressName)?.type, 'addressLabel');
+    const types = typesOf(address);
+    assert.deepEqual(
+      { ...types, name: undefined },
+      {
+        name: undefined,
+        address: 'addressLine1',
+        address2: 'addressLine2',
+        'country-input': 'country',
+        postalCode: 'postalCode',
+        city: 'city',
+        latitude: 'latitude',
+        longitude: 'longitude',
+      },
+    );
+    assert.equal(detection.detectType(byId('address3')).type, null, 'a third line stays empty');
+  });
+
+  it('qualifies the address form alone when clicked there', () => {
+    const { detection, byId } = setup();
+    const block = detection.findBlock(byId('city'));
+    assert.equal(block?.qualification, 'address');
+    assert.equal(detection.companionAddress(/** @type {any} */ (block)).length, 0);
+  });
+});

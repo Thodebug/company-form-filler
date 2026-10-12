@@ -115,6 +115,9 @@ affiché avec un verdict périmé ne crée rien et le bandeau indique « Champ n
 2. `CffDetection.findBlock` cherche le bloc du champ : premier ancêtre à trois types reconnus et
    visibles, sans sortir du formulaire, puis extension tant qu'aucun type ne se répète. Les
    champs de l'ancêtre suivant ne sont examinés que jusqu'au premier type répété.
+   Dans un bloc qualifié, les libellés vagues (« Code », « Libellé ») sont reconnus en plus.
+   Au remplissage, `CffDetection.companionAddress` ajoute le formulaire d'adresse voisin
+   d'un bloc société qui n'a pas d'adresse.
 3. `CffFill.fill` écrit les valeurs (géographie d'abord), contrôle ce que la page a gardé,
    repasse sur les champs modifiés par la page et renvoie de quoi annuler.
 

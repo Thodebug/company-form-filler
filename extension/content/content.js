@@ -284,7 +284,7 @@
         showBanner(message('bannerNotRecognized'));
         return { ok: false };
       }
-      fields = block.fields;
+      fields = [...block.fields, ...CffDetection.companionAddress(block)];
       mode = block.qualification;
     }
     filling = true;

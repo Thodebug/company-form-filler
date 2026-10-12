@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it, before } from 'node:test';
-import { fileSource, GENERATOR_SCRIPTS, loadPage, loadScripts } from './helpers.js';
+import {
+  fileSource,
+  GENERATOR_SCRIPTS,
+  loadPage,
+  loadScripts,
+  readProjectFile,
+} from './helpers.js';
 
 /** @type {Company} */
 let company;
@@ -167,6 +173,36 @@ describe('fill', () => {
     assert.deepEqual(order, ['zip', 'city', 'name', 'siret']);
     assert.ok(events.includes('blur:siret'));
     assert.equal(window.document.activeElement, byId('name'));
+  });
+
+  it('fills a company form and the address form next to it', async () => {
+    const { window, fill, detection, byId } = page(
+      readProjectFile('test/fixtures/third-party.html'),
+    );
+    const [name, addressName] = /** @type {HTMLInputElement[]} */ (
+      Array.from(window.document.querySelectorAll('input[name="name"]'))
+    );
+    /** @type {string[]} */
+    const countryEvents = [];
+    for (const type of ['focus', 'input', 'change']) {
+      byId('country-input').addEventListener(type, () => countryEvents.push(type));
+    }
+    const block = detection.findBlock(byId('siret'));
+    const fields = [...block.fields, ...detection.companionAddress(block)];
+    const result = await fill.fill(fields, company, { mode: 'company', settleDelay: 0 });
+    assert.equal(result.skipped, 0);
+    assert.equal(byId('code').value, company.erp.erpCompanyCode);
+    assert.equal(name.value, company.identity.legalName);
+    assert.equal(byId('siret').value, company.identity.siret);
+    assert.match(byId('phone').value, /^\+33 \d( \d{2}){4}$/);
+    assert.equal(addressName.value, 'Siège social');
+    assert.equal(byId('address').value, company.address.line1);
+    assert.equal(byId('address3').value, '');
+    assert.equal(byId('postalCode').value, company.address.postalCode);
+    assert.equal(byId('city').value, company.address.city);
+    assert.equal(byId('latitude').value, String(company.address.latitude));
+    assert.equal(byId('country-input').value, 'France');
+    assert.deepEqual(countryEvents, [], 'the preset country is left alone');
   });
 
   it('writes only address and generic fields in address mode', async () => {
