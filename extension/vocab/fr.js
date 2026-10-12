@@ -1,20 +1,9 @@
-/**
- * Field types recognized in French and English forms.
- *
- * Patterns run on normalized text: lowercase ASCII words separated by single
- * spaces ("N° de TVA" becomes "numero de tva", "companyName" becomes
- * "company name"). The order of TYPES is the priority used to break ties.
- *
- * Categories:
- *   - strong: specific to a company, qualifies a form as a company form;
- *   - address: postal address, three of them with postal code and city
- *     qualify a form as an address form;
- *   - generic: found on any site, never qualifies a form on its own.
- */
+// Patterns run on CffDetection.normalize() output ("N° de TVA" becomes
+// "numero de tva"). The order of TYPES breaks score ties. Generic types are
+// found on any site, so they never qualify a form on their own.
 'use strict';
 
 const CffVocab = (() => {
-  /** Words that make a source describe something else than a company field. */
   const NOT_COMPANY_NAME =
     /\b(adresse|address|siret|siren|tva|vat|numero|number|code|e ?mail|courriel|phone|tel|telephone|type|forme|form|secteur|sector|taille|size|effectif|ville|city|pays|country|site|logo|iban|capital|date|activite|activity|creation|statut)\b/;
 
@@ -149,7 +138,6 @@ const CffVocab = (() => {
       blockers: [NOT_COMPANY_NAME, /\bcommercial\b/],
       autocomplete: ['organization'],
     },
-    // Address.
     {
       id: 'fullAddress',
       category: 'address',
@@ -253,7 +241,6 @@ const CffVocab = (() => {
       ],
       autocomplete: ['address-line1'],
     },
-    // Generic.
     {
       id: 'mobile',
       category: 'generic',
@@ -373,14 +360,11 @@ const CffVocab = (() => {
     },
   ];
 
-  /**
-   * A source naming a person turns the company email and phone into the
-   * manager's ones.
-   */
+  /** A source naming a person makes the email and phone the manager's. */
   const PERSON_WORDS =
     /\b(dirigeant|gerant|gerante|president|presidente|representant|contact|personne|interlocuteur|manager|director|owner|prenom|nom|personal|perso|personnel|first name|last name)\b/;
 
-  /** Field types that fit a numeric input (number, or tel for a numeric keypad). */
+  /** Also allowed in type="tel", which sites use to get a numeric keypad. */
   const NUMERIC_TYPES = [
     'siren',
     'siret',
@@ -396,7 +380,6 @@ const CffVocab = (() => {
     'gln',
   ];
 
-  /** Input types that only accept some field types. */
   const INPUT_TYPE_ONLY = /** @type {Record<string, string[]>} */ ({
     email: ['email', 'managerEmail'],
     url: ['website'],
@@ -405,7 +388,6 @@ const CffVocab = (() => {
     number: NUMERIC_TYPES,
   });
 
-  /** Field types a textarea can hold. */
   const TEXTAREA_TYPES = ['fullAddress', 'addressLine1', 'addressLine2', 'legalName'];
 
   const BY_ID = new Map(TYPES.map((type) => [type.id, type]));

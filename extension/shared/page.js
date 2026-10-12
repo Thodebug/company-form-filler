@@ -1,7 +1,4 @@
-/**
- * Helpers shared by the extension pages (popup and viewer): messages to
- * the background, translations, theme and DOM building without innerHTML.
- */
+// Shared by the popup and the viewer, which build their DOM without innerHTML.
 'use strict';
 
 const CffPage = (() => {
@@ -17,8 +14,6 @@ const CffPage = (() => {
   }
 
   /**
-   * Fills elements carrying data-i18n (text), data-i18n-title and
-   * data-i18n-placeholder.
    * @param {ParentNode} root
    */
   function localize(root) {
@@ -40,7 +35,6 @@ const CffPage = (() => {
   }
 
   /**
-   * Sends a request to the background and returns its answer.
    * @param {Record<string, unknown>} message
    * @returns {Promise<any>}
    */
@@ -53,7 +47,7 @@ const CffPage = (() => {
   }
 
   /**
-   * Applies a theme: "system" follows prefers-color-scheme.
+   * Without data-theme, theme.css follows prefers-color-scheme.
    * @param {CffTheme} theme
    */
   function applyTheme(theme) {
@@ -66,7 +60,6 @@ const CffPage = (() => {
   }
 
   /**
-   * Creates an element with attributes and children.
    * @template {keyof HTMLElementTagNameMap} K
    * @param {K} tag
    * @param {Record<string, string | boolean | undefined>} [attributes]
@@ -91,8 +84,7 @@ const CffPage = (() => {
   }
 
   /**
-   * Small inline SVG icon from a path list (24 × 24 view box, stroked).
-   * @param {string[]} paths
+   * @param {string[]} paths Path data for a 24 × 24 view box.
    * @returns {SVGSVGElement}
    */
   function icon(paths) {
@@ -118,8 +110,7 @@ const CffPage = (() => {
   };
 
   /**
-   * Copies text on a user gesture, with a fallback for browsers that refuse
-   * the Clipboard API in extension pages.
+   * Some browsers refuse the Clipboard API in extension pages.
    * @param {string} text
    * @returns {Promise<boolean>}
    */

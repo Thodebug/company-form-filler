@@ -1,17 +1,12 @@
-/**
- * Writes company values into fields so that the page and its framework
- * (React, Angular, Vue, input masks) take them into account, and keeps
- * what is needed to undo the last fill.
- */
+// Values are written through the browser editing pipeline and user events so
+// that frameworks (React, Angular, Vue, input masks) pick them up.
 'use strict';
 
 const CffFill = (() => {
-  /** Geography first: a page may reload departments when the country changes,
-   * or fill the city when the postal code changes. */
+  // A page may reload departments when the country changes, or fill the city
+  // from the postal code, so geography is written first.
   const FIRST_TYPES = ['country', 'region', 'department', 'postalCode', 'city'];
-  /** Delay before checking whether the page changed what was written. */
   const SETTLE_DELAY_MS = 150;
-  /** Types written in address mode, besides the address category. */
   const ADDRESS_MODE_CATEGORIES = new Set(['address', 'generic']);
 
   /**
@@ -22,7 +17,6 @@ const CffFill = (() => {
    */
 
   /**
-   * Lowercase ASCII words, for comparing option labels and written values.
    * @param {string} text
    * @returns {string}
    */
@@ -36,8 +30,7 @@ const CffFill = (() => {
   }
 
   /**
-   * Compact form used to check that a field holds what was written, even
-   * when an input mask added separators.
+   * Ignores the separators an input mask may add.
    * @param {string} text
    * @returns {string}
    */
@@ -84,8 +77,8 @@ const CffFill = (() => {
   }
 
   /**
-   * Matches a headcount band on its lower bound ("3 à 5 salariés" and
-   * "3-5" or "De 3 à 5").
+   * Bands are labelled differently from site to site ("3 à 5 salariés",
+   * "3-5", "De 3 à 5"); only the lower bound is compared.
    * @param {Array<{ index: number, value: string, text: string }>} options
    * @param {string[]} wanted
    * @returns {number}
@@ -103,7 +96,6 @@ const CffFill = (() => {
   }
 
   /**
-   * Current value of a control, as a string.
    * @param {Control} control
    * @returns {string}
    */
@@ -112,8 +104,6 @@ const CffFill = (() => {
   }
 
   /**
-   * Fires the events a user edit fires, minus the ones the browser already
-   * fired.
    * @param {Control} control
    * @param {string[]} types
    */
@@ -124,10 +114,8 @@ const CffFill = (() => {
   }
 
   /**
-   * Writes text into an input or a textarea. Tries execCommand('insertText')
-   * first: it goes through the browser editing pipeline, fires trusted
-   * beforeinput and input events and keeps Ctrl+Z working. Falls back to a
-   * direct assignment followed by an input event.
+   * execCommand('insertText') fires trusted beforeinput and input events and
+   * keeps Ctrl+Z working; direct assignment is the fallback.
    * @param {HTMLInputElement | HTMLTextAreaElement} control
    * @param {string} value
    * @returns {boolean} Whether the field holds the value.
@@ -158,7 +146,6 @@ const CffFill = (() => {
   }
 
   /**
-   * Writes one field: focus, value, change, blur.
    * @param {TypedField} field
    * @param {Company} company
    * @returns {{ status: 'filled' | 'skipped' | 'empty', previous: string, written: string }}
@@ -229,7 +216,6 @@ const CffFill = (() => {
   }
 
   /**
-   * Fills fields with the values of a company.
    * @param {TypedField[]} fields
    * @param {Company} company
    * @param {{ mode: 'company' | 'address' | 'field', focusBack?: Element | null, settleDelay?: number }} options
@@ -276,9 +262,8 @@ const CffFill = (() => {
   }
 
   /**
-   * Restores the values a fill replaced, in reverse order.
    * @param {UndoEntry[]} entries
-   * @returns {number} Number of restored fields.
+   * @returns {number}
    */
   function undo(entries) {
     let restored = 0;

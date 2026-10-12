@@ -1,6 +1,5 @@
-// Renders assets/icon.svg to the PNG sizes used by the extension and copies
-// the SVG to the demo site as its favicon. Run after editing the icon:
-//   npm run icons
+// Renders assets/icon.svg to the extension PNGs and the site favicon.
+// Usage: npm run icons
 import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';

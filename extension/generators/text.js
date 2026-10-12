@@ -1,11 +1,8 @@
-/**
- * Text helpers for generated names, slugs and codes.
- */
 'use strict';
 
 const CffText = (() => {
   /**
-   * Removes diacritics.
+   * The range is U+0300 to U+036F, combining diacritical marks.
    * @param {string} text
    * @returns {string}
    */
@@ -14,8 +11,7 @@ const CffText = (() => {
   }
 
   /**
-   * Uppercase ASCII, keeping only letters, digits, spaces, apostrophes and
-   * hyphens: the shape of a legal name in the French business register.
+   * Shape of a legal name in the French business register.
    * @param {string} text
    * @returns {string}
    */
@@ -27,7 +23,7 @@ const CffText = (() => {
       .trim();
   }
 
-  /** Words that never end a shortened name: "PENSION CANINE DU" reads badly. */
+  // Never left at the end of a shortened name: "PENSION CANINE DU" reads badly.
   const SMALL_WORDS = new Set([
     'de',
     'du',
@@ -46,8 +42,6 @@ const CffText = (() => {
   ]);
 
   /**
-   * Keeps the first words whose total length, separators included, fits
-   * `maxLength`, without a trailing small word. A single word too long is cut.
    * @param {string[]} words
    * @param {string} separator
    * @param {number} maxLength
@@ -65,7 +59,6 @@ const CffText = (() => {
   }
 
   /**
-   * Lowercase ASCII slug with hyphens, cut between words at `maxLength`.
    * @param {string} text
    * @param {number} maxLength
    * @returns {string}
@@ -79,7 +72,6 @@ const CffText = (() => {
   }
 
   /**
-   * "BOULANGERIE DU CENTRE" to "Boulangerie du Centre".
    * @param {string} text
    * @returns {string}
    */
@@ -100,8 +92,6 @@ const CffText = (() => {
   }
 
   /**
-   * Shortens a name to `maxLength` by dropping trailing words, then by
-   * cutting the last remaining word if needed.
    * @param {string} text
    * @param {number} maxLength
    * @returns {string}
@@ -113,7 +103,6 @@ const CffText = (() => {
   }
 
   /**
-   * First `count` ASCII letters of a name, padded with X.
    * @param {string} text
    * @param {number} count
    * @returns {string}

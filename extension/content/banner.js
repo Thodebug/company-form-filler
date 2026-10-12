@@ -1,11 +1,5 @@
-/**
- * Small status banner shown in the page after a fill.
- *
- * It lives in a closed shadow root, so page styles do not reach it, and is
- * styled through the CSSOM only (adopted style sheet, element.style), which
- * strict Content Security Policies allow. It is shown as a manual popover
- * when the browser supports it, to stay clickable above a modal dialog.
- */
+// Styled through the CSSOM only (adopted sheet, element.style), which strict
+// Content Security Policies allow; the closed shadow root keeps page styles out.
 'use strict';
 
 const CffBanner = (() => {
@@ -51,10 +45,12 @@ const CffBanner = (() => {
   /**
    * @param {ShadowRoot} shadow
    * @param {Window} view
-   * @returns {boolean} Whether the style sheet could be adopted.
+   * @returns {boolean}
    */
   function adoptStyles(shadow, view) {
     try {
+      // An adopted sheet must be constructed for this very document, hence the
+      // constructor of its window rather than the content script's global.
       const Sheet = /** @type {typeof CSSStyleSheet} */ (/** @type {any} */ (view).CSSStyleSheet);
       const sheet = new Sheet();
       sheet.replaceSync(CSS);
@@ -66,7 +62,7 @@ const CffBanner = (() => {
   }
 
   /**
-   * Minimal styling when constructable style sheets are unavailable.
+   * For browsers without constructable style sheets.
    * @param {HTMLElement} box
    */
   function styleWithoutSheet(box) {
@@ -85,7 +81,6 @@ const CffBanner = (() => {
   }
 
   /**
-   * Shows a message, replacing the previous banner.
    * @param {Document} document
    * @param {string} message
    * @param {{ undoLabel?: string, onUndo?: () => void }} [options]
@@ -124,6 +119,7 @@ const CffBanner = (() => {
     }
     shadow.append(box);
 
+    // A manual popover stays clickable above a modal dialog.
     const supportsPopover = typeof host.showPopover === 'function';
     if (supportsPopover) {
       host.setAttribute('popover', 'manual');
@@ -139,7 +135,6 @@ const CffBanner = (() => {
     current = { host, timer: setTimeout(hide, HIDE_DELAY_MS) };
   }
 
-  /** Removes the banner, if any. */
   function hide() {
     if (!current) {
       return;

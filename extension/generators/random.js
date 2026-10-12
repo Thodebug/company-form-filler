@@ -1,20 +1,15 @@
-/**
- * Uniform and weighted random draws backed by the Web Crypto API.
- *
- * Every draw goes through `crypto.getRandomValues`; there is no seed and no
- * reproducibility, on purpose.
- */
+// Backed by crypto.getRandomValues; unseeded on purpose.
 'use strict';
 
 const CffRandom = (() => {
   const UINT32_RANGE = 2 ** 32;
-  /** Random words are fetched by batches: one crypto call per draw is slow. */
+  // Fetched in batches: one crypto call per draw is slow.
   const POOL_SIZE = 1024;
   const pool = new Uint32Array(POOL_SIZE);
   let poolIndex = POOL_SIZE;
 
   /**
-   * @returns {number} Uniform 32-bit unsigned integer.
+   * @returns {number}
    */
   function nextUint32() {
     if (poolIndex >= POOL_SIZE) {
@@ -25,7 +20,6 @@ const CffRandom = (() => {
   }
 
   /**
-   * Returns a uniformly distributed integer in [0, max).
    * @param {number} max Exclusive upper bound, between 1 and 2^32.
    * @returns {number}
    */
@@ -44,7 +38,7 @@ const CffRandom = (() => {
   }
 
   /**
-   * Integer in [min, max], both included.
+   * Both bounds included.
    * @param {number} min
    * @param {number} max
    * @returns {number}
@@ -63,7 +57,7 @@ const CffRandom = (() => {
 
   /**
    * @template T
-   * @param {readonly T[]} items Non-empty list.
+   * @param {readonly T[]} items
    * @returns {T}
    */
   function pick(items) {
@@ -74,8 +68,7 @@ const CffRandom = (() => {
   }
 
   /**
-   * Cumulative weights per list and weight function: the same lists (communes
-   * of a department, departments) are drawn from again and again.
+   * The same lists (departments, communes of a department) are drawn from repeatedly.
    * @type {WeakMap<readonly unknown[], { weightOf: Function, cumulative: number[] }>}
    */
   const cumulativeCache = new WeakMap();
@@ -101,11 +94,10 @@ const CffRandom = (() => {
   }
 
   /**
-   * Picks an item with a probability proportional to its weight. Pass a
-   * stable `weightOf` function to benefit from the cache.
+   * Pass a stable `weightOf` function, or the cache never hits.
    * @template T
    * @param {readonly T[]} items
-   * @param {(item: T) => number} weightOf Non-negative weights, at least one positive.
+   * @param {(item: T) => number} weightOf
    * @returns {T}
    */
   function weighted(items, weightOf) {
@@ -115,7 +107,6 @@ const CffRandom = (() => {
       throw new RangeError('No positive weight');
     }
     const target = int(total);
-    // First index whose cumulative weight exceeds the target.
     let low = 0;
     let high = cumulative.length - 1;
     while (low < high) {
@@ -154,8 +145,7 @@ const CffRandom = (() => {
   }
 
   /**
-   * Version 4 UUID, built by hand: crypto.randomUUID only exists in secure
-   * contexts.
+   * crypto.randomUUID only exists in secure contexts.
    * @returns {string}
    */
   function uuid() {

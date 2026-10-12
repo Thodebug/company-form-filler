@@ -1,18 +1,17 @@
-// Builds the generated data files of extension/data/fr from official
-// sources. Run it once a year, or when a source changes, then commit the
-// result. Hand-curated files of extension/data/fr are not touched.
+// Generates the official-source files of extension/data/fr; hand-curated files
+// there are left alone.
 //
 // Sources (see LICENSE-DATA.md):
 //   - Communes, postal codes, populations, departments, regions:
 //     @etalab/decoupage-administratif (INSEE Code officiel géographique,
 //     La Poste), Licence Ouverte 2.0.
-//   - Commune centers: IGN Admin Express COG through gregoiredavid/france-geojson,
-//     pinned commit, Licence Ouverte 2.0.
+//   - Commune centers: IGN Admin Express COG through gregoiredavid/france-geojson
+//     at a pinned commit, Licence Ouverte 2.0.
 //   - NAF rév. 2 labels: @socialgouv/codes-naf (INSEE), Licence Ouverte 2.0.
 //   - NAF 2025 selection: scripts/data/naf-selection.json, curated from the
 //     INSEE "Structure NAF 2025" document.
 //
-// Usage: npm run build:data   (needs network access to raw.githubusercontent.com)
+// Usage: npm run build:data (fetches from raw.githubusercontent.com)
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -32,10 +31,10 @@ const GEOJSON_FILES = [
   'departements/976-mayotte/communes-976-mayotte.geojson',
 ];
 
-/** Cities split into municipal arrondissements: commune code to display name. */
+/** Listed through their municipal arrondissements, which take the city name. */
 const SPLIT_CITIES = { 75056: 'Paris', 69123: 'Lyon', 13055: 'Marseille' };
 
-/** Fixed-line zone (first two digits) by region code, with department exceptions. */
+/** Fixed-line zone (first two digits) by region code. */
 const PHONE_ZONE_BY_REGION = {
   11: '01',
   24: '02',
@@ -59,7 +58,7 @@ const PHONE_ZONE_BY_REGION = {
 /** Eastern Occitanie departments use zone 04. */
 const PHONE_ZONE_EXCEPTIONS = { 11: '04', 30: '04', 34: '04', 48: '04', 66: '04' };
 
-/** Characters the project forbids in text files, with their replacement. */
+/** Banned from repository text files by test/project.test.js. */
 const FORBIDDEN_CHARACTERS = [
   [/\u2014|\u2013/g, '-'],
   [/\u00b7/g, '.'],
@@ -164,7 +163,7 @@ async function buildGeography() {
       .map((commune) => [commune.code, clean(commune.nom)]),
   );
 
-  /** Commune nouvelle code to the centers of its former communes. */
+  // Communes nouvelles missing from the GeoJSON fall back on their former communes.
   /** @type {Map<string, Array<[number, number]>>} */
   const delegatedCenters = new Map();
   for (const commune of communes) {

@@ -6,9 +6,8 @@
   </head>
   <body>
     <!--
-      Each control carries data-expected: the field type it must be recognized
-      as, or "none". Descriptions live in comments because comments are not
-      part of textContent and therefore never influence detection.
+      data-expected: the type each control must be detected as, or "none".
+      Notes are comments because textContent would feed detection.
     -->
     <form>
       <!-- SIRET: label for, camelCase name -->
@@ -134,7 +133,7 @@
       <!-- SIREN: formcontrolname -->
       <div class="row"><input formcontrolname="numeroSiren" data-expected="siren" /></div>
 
-      <!-- VAT number (a trap in v1) -->
+      <!-- VAT number -->
       <div class="row">
         <label for="t1">N° TVA intracommunautaire</label>
         <input id="t1" placeholder="FR12345678901" data-expected="vat" />

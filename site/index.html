@@ -13,10 +13,9 @@
   </head>
   <body>
     <!--
-      Every control carries data-expected: the field type the extension must
-      recognize, or "none". Containers carrying data-expected-block are the
-      block the extension must find around their first control, with its
-      qualification (company, address or none). The tests read this page.
+      Read by the tests. data-expected: the type each control must be detected
+      as, or "none". data-expected-block: the qualification of the block found
+      from its first control (company, address or none).
     -->
     <header class="top">
       <img src="favicon.svg" alt="" width="28" height="28" />
@@ -35,7 +34,6 @@
     </p>
 
     <main class="board">
-      <!-- 1. Supplier creation, split in sections -->
       <section class="panel">
         <h2>1. Création de fournisseur <small>formulaire en sections, rempli en entier</small></h2>
         <form id="supplier" data-expected-block="company" onsubmit="return false;">
@@ -164,7 +162,6 @@
         </form>
       </section>
 
-      <!-- 2. Order with billing and shipping blocks -->
       <section class="panel">
         <h2>
           2. Commande <small>facturation et livraison : seul le bloc cliqué est rempli</small>
@@ -205,7 +202,6 @@
         </form>
       </section>
 
-      <!-- 3. Pure address -->
       <section class="panel">
         <h2>3. Adresse seule <small>« Nouvelle adresse et remplir »</small></h2>
         <form id="address-only" data-expected-block="address" onsubmit="return false;">
@@ -240,7 +236,6 @@
         </form>
       </section>
 
-      <!-- 4. English form -->
       <section class="panel">
         <h2>4. Formulaire en anglais</h2>
         <form id="english" data-expected-block="company" onsubmit="return false;">
@@ -276,7 +271,6 @@
         </form>
       </section>
 
-      <!-- 5. Traps -->
       <section class="panel traps">
         <h2>5. Pièges <small>aucune entrée de remplissage</small></h2>
         <form id="newsletter" data-expected-block="none" onsubmit="return false;">
@@ -311,7 +305,6 @@
         </form>
       </section>
 
-      <!-- 6. Edge cases -->
       <section class="panel">
         <h2>6. Cas limites <small>champs cachés et trop courts</small></h2>
         <form id="limits" data-expected-block="company" onsubmit="return false;">
@@ -336,7 +329,6 @@
         </form>
       </section>
 
-      <!-- 7. Components -->
       <section class="panel">
         <h2>7. Composants <small>masque de saisie, shadow DOM, iframe, champ ajouté</small></h2>
         <form id="components" data-expected-block="company" onsubmit="return false;">

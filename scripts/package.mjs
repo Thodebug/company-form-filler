@@ -1,11 +1,6 @@
-// Builds one folder and one zip per browser family in dist/.
-//
-// The code is copied untouched; only manifest.json differs:
-//   - Firefox: "menus" permission, background.scripts (every background
-//     script, in order), gecko settings.
-//   - Chromium (Chrome, Edge): "contextMenus" permission,
-//     background.service_worker (which imports the other scripts),
-//     minimum_chrome_version.
+// Builds dist/firefox and dist/chromium from the same code. Only manifest.json
+// differs: Firefox takes "menus" and background.scripts, Chromium takes
+// "contextMenus" and the service worker.
 // Usage: npm run build
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

@@ -1,7 +1,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
 
-/** Globals each classic script of the extension defines for the others. */
+// Classic extension scripts share these through the global scope.
 const extensionGlobals = Object.fromEntries(
   [
     'CffRandom',
@@ -37,7 +37,7 @@ export default [
       },
     },
     rules: {
-      // Top-level constants are the modules other scripts use.
+      // Top-level constants are read by the other scripts.
       'no-unused-vars': ['error', { vars: 'local', argsIgnorePattern: '^_' }],
       'no-redeclare': ['error', { builtinGlobals: false }],
     },

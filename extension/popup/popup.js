@@ -1,8 +1,3 @@
-/**
- * Popup of the toolbar button: preview of the company of the current tab
- * (or of the last company), generation without leaving the popup, and the
- * way to the viewer.
- */
 'use strict';
 
 (() => {

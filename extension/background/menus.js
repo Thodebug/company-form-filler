@@ -1,7 +1,4 @@
-/**
- * Context menu: a fixed "Company Form Filler" parent with four entries,
- * each shown only when it applies to the right-clicked control.
- */
+// Entries are created once, hidden, then shown or hidden for each right-click.
 'use strict';
 
 const CffMenus = (() => {
@@ -20,7 +17,6 @@ const CffMenus = (() => {
    */
 
   /**
-   * Visibility and titles of the entries for a verdict.
    * @param {CffVerdict | null} verdict
    * @param {boolean} tabHasCompany
    * @param {(name: string, substitutions?: string[]) => string} message
@@ -74,7 +70,6 @@ const CffMenus = (() => {
       });
     }
 
-    /** Creates the entries, all hidden. */
     async function ensure() {
       await menus.removeAll();
       await create({
@@ -107,7 +102,7 @@ const CffMenus = (() => {
       try {
         await updateAll(state);
       } catch {
-        // The browser lost the entries (update or restart race): recreate.
+        // The browser lost the entries (update or restart race).
         await ensure();
         await updateAll(state).catch(() => {});
       }

@@ -1,9 +1,4 @@
-/**
- * Check digits and keys of French and international identifiers.
- *
- * Shared by the generators (background) and the viewer. Validators used by
- * the tests are written independently in test/validators.js.
- */
+// The tests check these against independent validators in test/validators.js.
 'use strict';
 
 const CffChecksums = (() => {
@@ -30,7 +25,6 @@ const CffChecksums = (() => {
   }
 
   /**
-   * Digit that makes `partial` + digit pass the Luhn check.
    * @param {string} partial
    * @returns {string}
    */
@@ -44,7 +38,7 @@ const CffChecksums = (() => {
   }
 
   /**
-   * Remainder of a long decimal string divided by 97.
+   * Digit by digit: the input exceeds Number precision.
    * @param {string} digits
    * @returns {number}
    */
@@ -67,7 +61,7 @@ const CffChecksums = (() => {
 
   /**
    * French RIB key: 97 - ((89 × bank + 15 × branch + 3 × account) mod 97).
-   * The account number holds digits only.
+   * Letters in the account number are not supported.
    * @param {string} bankCode
    * @param {string} branchCode
    * @param {string} accountNumber
@@ -80,7 +74,7 @@ const CffChecksums = (() => {
   }
 
   /**
-   * Converts letters to their ISO 13616 numeric value (A = 10 ... Z = 35).
+   * ISO 13616: A = 10 to Z = 35.
    * @param {string} text
    * @returns {string}
    */
@@ -89,7 +83,7 @@ const CffChecksums = (() => {
   }
 
   /**
-   * IBAN check digits for a country and a BBAN (ISO 13616, mod 97).
+   * ISO 13616: 98 - (BBAN + country + "00") mod 97.
    * @param {string} country Two letters.
    * @param {string} bban
    * @returns {string} Two digits.

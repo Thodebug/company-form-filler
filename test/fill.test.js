@@ -254,7 +254,6 @@ describe('fill', () => {
   it('restores the previous value when the page refuses the new one', async () => {
     const { window, fill, byId } = page('<form><input id="siret" value="old"></form>');
     const input = byId('siret');
-    // A page that rejects every change.
     input.addEventListener('input', () => {
       Object.defineProperty(input, 'value', {
         configurable: true,
@@ -348,7 +347,7 @@ describe('fill', () => {
 });
 
 describe('banner', () => {
-  it('shows one status banner at a time and runs the undo action', () => {
+  it('shows one status banner at a time and does not undo when hidden', () => {
     const { window, get } = page('<p>page</p>');
     const banner = get('CffBanner');
     let undone = 0;

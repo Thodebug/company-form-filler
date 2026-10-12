@@ -1,6 +1,5 @@
-// Independent validators, used by the tests to check what the extension
-// generates. They are written from the official rules, separately from the
-// extension code, and are not shipped with the extension.
+// Written from the official rules, independently of the extension code, so
+// tests do not check the generators against themselves.
 
 const LA_POSTE_SIREN = '356000000';
 
@@ -35,8 +34,7 @@ export function isValidSiren(value) {
 }
 
 /**
- * La Poste establishments follow their own rule: the sum of the 14 digits
- * is a multiple of 5.
+ * La Poste establishments use their own rule: the digit sum is a multiple of 5.
  * @param {string} value
  * @returns {boolean}
  */
@@ -95,8 +93,8 @@ export function isValidRib(bank, branch, account, key) {
 }
 
 /**
- * GS1 numbers (GLN, GTIN): weighting from the right, the check digit has
- * weight 1, then 3, 1, 3... The weighted sum is a multiple of 10.
+ * GS1 (GLN, GTIN): weights 1, 3, 1, 3 and so on from the right; the sum is a
+ * multiple of 10.
  * @param {string} value
  * @returns {boolean}
  */

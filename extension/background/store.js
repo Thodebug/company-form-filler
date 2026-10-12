@@ -1,11 +1,5 @@
-/**
- * Persistent state in storage.local: last company, history, favorites,
- * viewer locks, theme and onboarding.
- *
- * Every read is validated, so a damaged or foreign value never reaches the
- * rest of the extension. When storage fails, the state lives on in memory
- * and `failed` tells the popup and the viewer.
- */
+// Every read is validated so a damaged or foreign value never reaches the rest
+// of the extension. If storage fails, state is kept in memory and reported.
 'use strict';
 
 const CffStore = (() => {
@@ -33,8 +27,7 @@ const CffStore = (() => {
   }
 
   /**
-   * Brings an older stored state to the current schema. Version 1 is the
-   * first one: there is nothing to migrate yet.
+   * Schema version 1 is the first one: nothing to migrate yet.
    * @param {Record<string, any>} raw
    * @returns {Record<string, any>}
    */
@@ -43,7 +36,6 @@ const CffStore = (() => {
   }
 
   /**
-   * Keeps only valid values of a stored state.
    * @param {unknown} value
    * @returns {CffStoredState}
    */
@@ -87,10 +79,9 @@ const CffStore = (() => {
    * @param {CffStorageArea} area storage.local
    */
   function createStore(area) {
-    /** State read from storage, or changed since a successful read. */
     /** @type {CffStoredState | null} */
     let memory = null;
-    /** State used while storage cannot be read: never written back. */
+    // Used while storage cannot be read; never written back.
     /** @type {CffStoredState | null} */
     let fallback = null;
     let failed = false;
@@ -107,8 +98,8 @@ const CffStore = (() => {
         failed = false;
         return memory;
       } catch {
-        // Retried on the next call. Until then the extension works in memory,
-        // and nothing is saved: saving would overwrite the stored favorites.
+        // Retried on the next call. Nothing is saved meanwhile: it would
+        // overwrite the stored favorites.
         failed = true;
         fallback = fallback || defaults();
         return fallback;
@@ -116,8 +107,6 @@ const CffStore = (() => {
     }
 
     /**
-     * Applies a change and saves the result, unless the stored state could
-     * not be read.
      * @param {(state: CffStoredState) => CffStoredState} change
      * @returns {Promise<CffStoredState>}
      */
@@ -140,7 +129,6 @@ const CffStore = (() => {
     return {
       get,
       update,
-      /** Whether the last storage operation failed. */
       get failed() {
         return failed;
       },
@@ -148,7 +136,6 @@ const CffStore = (() => {
   }
 
   /**
-   * A new company becomes the last one and enters the history.
    * @param {CffStoredState} state
    * @param {Company} company
    * @returns {CffStoredState}
@@ -163,7 +150,6 @@ const CffStore = (() => {
   }
 
   /**
-   * A company of the history or the favorites becomes the last one.
    * @param {CffStoredState} state
    * @param {Company} company
    * @returns {CffStoredState}
@@ -190,7 +176,6 @@ const CffStore = (() => {
   }
 
   /**
-   * Adds or removes a favorite. Adding beyond MAX_FAVORITES does nothing.
    * @param {CffStoredState} state
    * @param {string} id
    * @param {boolean} favorite
@@ -216,7 +201,6 @@ const CffStore = (() => {
   }
 
   /**
-   * Removes a company from the history. The last company stays.
    * @param {CffStoredState} state
    * @param {string} id
    * @returns {CffStoredState}
@@ -236,7 +220,6 @@ const CffStore = (() => {
   }
 
   /**
-   * Erases every company and the locks; keeps the theme and the onboarding.
    * @param {CffStoredState} state
    * @returns {CffStoredState}
    */

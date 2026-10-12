@@ -3,10 +3,9 @@ import { describe, it } from 'node:test';
 import { loadPage, readProjectFile } from './helpers.js';
 
 /**
- * Checks every element carrying data-expected in `html`.
  * @param {string} html
  * @param {string} label
- * @returns {number} Number of checked elements.
+ * @returns {number}
  */
 function checkExpectations(html, label) {
   const { window, get } = loadPage(html);

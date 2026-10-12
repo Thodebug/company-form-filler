@@ -1,6 +1,4 @@
-// Demo page behaviour: key checks of filled values, an input mask, shadow
-// DOM components and a field added on demand. This script belongs to the
-// demo page only; the extension does not use it.
+// Demo page only, not shipped with the extension.
 (function () {
   'use strict';
 
@@ -76,7 +74,7 @@
   document.addEventListener('input', onValue, true);
   document.addEventListener('change', onValue, true);
 
-  // Input mask in the PrimeNG way: digits only, grouped as the mask says.
+  // Mimics PrimeNG p-inputmask, which reformats the value as it is typed.
   for (const host of document.querySelectorAll('p-inputmask')) {
     const input = host.querySelector('input');
     const mask = host.getAttribute('mask') || '';
@@ -97,7 +95,6 @@
     });
   }
 
-  // A field component rendering its label and input in a shadow root.
   customElements.define(
     'cff-demo-field',
     class extends HTMLElement {
@@ -122,7 +119,6 @@
     },
   );
 
-  // A field added after the page has loaded.
   document.getElementById('add-field')?.addEventListener('click', (event) => {
     const button = /** @type {HTMLButtonElement} */ (event.currentTarget);
     const row = document.createElement('div');

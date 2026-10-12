@@ -1,14 +1,5 @@
-/**
- * Turns company values into the text a field expects.
- *
- * Each field type has an ordered list of candidate formats, the first one
- * being the default. Clues read on the field (placeholder, input mask,
- * pattern, maxlength, input type) select another candidate when they
- * describe it. Values are never truncated: a candidate longer than the
- * field is dropped, and a field too short for every candidate is skipped.
- *
- * Shared by the content scripts (filling) and the viewer (display).
- */
+// Values are never truncated: a field too short for every candidate format is
+// skipped. Also loaded by the viewer and the popup.
 'use strict';
 
 const CffFormat = (() => {
@@ -24,7 +15,6 @@ const CffFormat = (() => {
    */
 
   /**
-   * Reads the formatting clues of a control.
    * @param {Element} element
    * @returns {FieldHints}
    */
@@ -67,7 +57,6 @@ const CffFormat = (() => {
   };
 
   /**
-   * "12345678900012" to "123 456 789 00012".
    * @param {string} digits
    * @param {number[]} sizes
    * @returns {string}
@@ -94,7 +83,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * National phone number variants: collé, spaced, international.
    * @param {string} national Ten digits starting with 0.
    * @returns {string[]}
    */
@@ -134,8 +122,7 @@ const CffFormat = (() => {
   }
 
   /**
-   * Candidate texts of a field type, default first. Empty when the company
-   * has no value for that type (no complement, no capital).
+   * Default format first.
    * @param {string} type
    * @param {Company} company
    * @param {FieldHints} hints
@@ -251,8 +238,8 @@ const CffFormat = (() => {
   }
 
   /**
-   * NAF 2025 by default; NAF rév. 2 when the placeholder shows a rév. 2 code
-   * (rév. 2 sub-classes end with Z or A to F, NAF 2025 ones with G to L or Y).
+   * NAF rév. 2 sub-classes end with Z or A to F, NAF 2025 ones with G to L or
+   * Y, so a rév. 2 placeholder selects the rév. 2 code.
    * @param {Company} company
    * @param {FieldHints} hints
    * @returns {string[]}
@@ -280,7 +267,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * Shape of a text: digits become 9 and letters A, other characters stay.
    * @param {string} text
    * @returns {string}
    */
@@ -289,7 +275,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * Shape described by a placeholder made of example digits or of x, #, _.
    * @param {string} placeholder
    * @returns {string}
    */
@@ -298,7 +283,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * Shape described by an input mask: 9, 0 and # are digits, a is a letter.
    * @param {string} mask
    * @returns {string}
    */
@@ -307,7 +291,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * Chooses the candidate the field expects.
    * @param {string[]} candidates Default first.
    * @param {FieldHints} hints
    * @returns {string | null} Null when no candidate fits the field.
@@ -327,8 +310,8 @@ const CffFormat = (() => {
     if (sameShape) {
       return sameShape;
     }
-    // A maxlength of exactly a variant's length describes it (17 for a
-    // spaced SIRET, 33 for a grouped IBAN).
+    // A maxlength matching a variant's length points to it (17 for a spaced
+    // SIRET, 33 for a grouped IBAN).
     if (hints.maxLength && fitting[0].length !== hints.maxLength) {
       const exactLength = fitting.find((value) => value.length === hints.maxLength);
       if (exactLength) {
@@ -353,7 +336,6 @@ const CffFormat = (() => {
   }
 
   /**
-   * Text to write in a field of the given type.
    * @param {string} type
    * @param {Company} company
    * @param {FieldHints} [hints]
@@ -364,6 +346,7 @@ const CffFormat = (() => {
     return choose(candidatesFor(type, company, hints), hints);
   }
 
+  // Numeric entries are INSEE legal category codes (level 2).
   const LEGAL_FORM_SYNONYMS = /** @type {Record<string, string[]>} */ ({
     SAS: ['Société par actions simplifiée', '57', 'SA simplifiée'],
     SASU: ['SAS unipersonnelle', 'Société par actions simplifiée unipersonnelle', '57'],
@@ -381,6 +364,7 @@ const CffFormat = (() => {
     ],
   });
 
+  // 250 is the ISO 3166-1 numeric code.
   const COUNTRY_SYNONYMS = ['FR', 'FRA', '250', 'France', 'France métropolitaine'];
   const TITLE_SYNONYMS = /** @type {Record<string, string[]>} */ ({
     'M.': ['M.', 'M', 'Monsieur', 'Mr', 'Mr.'],
@@ -388,7 +372,7 @@ const CffFormat = (() => {
   });
 
   /**
-   * Texts that may name the company value in a select option, best first.
+   * Best match first.
    * @param {string} type
    * @param {Company} company
    * @returns {string[]}
@@ -427,9 +411,7 @@ const CffFormat = (() => {
     }
   }
 
-  /**
-   * Display helpers for the viewer and the popup.
-   */
+  /** Used by the viewer and the popup. */
   const display = {
     /** @param {string} siret */
     siret: (siret) => group(siret, [3, 3, 3, 5]),
@@ -441,7 +423,7 @@ const CffFormat = (() => {
     date: frenchDate,
     /**
      * @param {number | null} amount
-     * @param {string} [noneLabel] Text when there is no amount.
+     * @param {string} [noneLabel]
      */
     euros: (amount, noneLabel = '') =>
       amount === null ? noneLabel : `${groupThousands(amount)} €`,

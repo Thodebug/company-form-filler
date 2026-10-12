@@ -1,12 +1,5 @@
-/**
- * Builds a fictitious but consistent French company.
- *
- * Each group of the company is either drawn anew or kept from a previous
- * company (locks of the viewer). A final harmonization pass recomputes every
- * value derived from another group, so a company is always consistent:
- * SIRET, VAT number and RCS follow the SIREN, emails follow the legal name,
- * the fixed line follows the region, the IBAN follows the bank details...
- */
+// Each group is drawn anew or kept from a previous company (viewer locks);
+// harmonize() then recomputes every value derived from another group.
 'use strict';
 
 const CffCompany = (() => {
@@ -21,6 +14,7 @@ const CffCompany = (() => {
     'accounting',
     'erp',
   ]);
+  // La Poste SIRETs follow a digit-sum rule instead of Luhn.
   const LA_POSTE_SIREN = '356000000';
   const MAX_LEGAL_NAME = 38;
   const MAX_SHORT_NAME = 20;
@@ -28,7 +22,7 @@ const CffCompany = (() => {
   const NAME_ATTEMPTS = 20;
   const DAY_MS = 86_400_000;
 
-  /** Fixed-line ranges reserved for fiction (plan de numérotation, art. 2.5.12). */
+  // Ranges ARCEP reserves for fiction (plan de numérotation, art. 2.5.12).
   const FICTION_LANDLINE = {
     '01': '019900',
     '02': '026191',
@@ -73,8 +67,6 @@ const CffCompany = (() => {
    */
 
   /**
-   * Generates a company. Locked groups keep their source values from
-   * `previous`; derived values are always recomputed.
    * @param {CompanyDataSource} source
    * @param {GenerateOptions} [options]
    * @returns {Promise<Company>}
@@ -173,7 +165,7 @@ const CffCompany = (() => {
   }
 
   /**
-   * Head office NIC, between 00010 and 00099, so that the SIRET passes Luhn.
+   * Head office NICs are small; the last digit makes the SIRET pass Luhn.
    * @param {string} siren
    * @returns {string}
    */
@@ -183,7 +175,6 @@ const CffCompany = (() => {
   }
 
   /**
-   * Uniform date between `minDate` and the day before `today`.
    * @param {string} minDate ISO date.
    * @param {Date} today
    * @returns {string} ISO date.
@@ -228,7 +219,6 @@ const CffCompany = (() => {
   }
 
   /**
-   * Builds a plausible legal name from the patterns of the activity family.
    * @param {CompanyData} data
    * @param {NafEntry | undefined} naf
    * @param {string} family
@@ -294,7 +284,7 @@ const CffCompany = (() => {
   }
 
   /**
-   * Draws a real commune, weighted by population, with a fictitious street.
+   * Real commune, so postal and INSEE codes match; the street is fictitious.
    * @param {CompanyData} data
    * @param {CompanyDataSource} source
    * @returns {Promise<Company['address']>}
@@ -332,7 +322,7 @@ const CffCompany = (() => {
   }
 
   /**
-   * Moves a coordinate by up to 0.01 degree, rounded to 6 decimals.
+   * Up to ±0.01° so that addresses do not all sit on the commune centre.
    * @param {number} value
    * @returns {number}
    */
@@ -404,8 +394,7 @@ const CffCompany = (() => {
   }
 
   /**
-   * Recomputes every derived value and redraws the values that no longer fit
-   * the legal form, the activity or the region.
+   * Also redraws kept values that do not fit the legal form, activity or region.
    * @param {Company} company
    * @param {CompanyData} data
    * @param {LegalFormEntry} legalForm
@@ -480,8 +469,7 @@ const CffCompany = (() => {
   }
 
   /**
-   * Log-uniform amount in thousands of euros: small capitals are the most
-   * common, as in the register.
+   * Log-uniform: small share capitals are the most common in the register.
    * @param {[number, number]} range
    * @returns {number}
    */
@@ -546,7 +534,6 @@ const CffCompany = (() => {
   }
 
   /**
-   * Structural check of a stored company, used before trusting storage.
    * @param {unknown} value
    * @returns {value is Company}
    */

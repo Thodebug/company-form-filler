@@ -1,5 +1,3 @@
-// Data model shared by the background, content scripts, popup and viewer.
-
 type CompanyGroup =
   'identity' | 'tax' | 'address' | 'contact' | 'manager' | 'bank' | 'accounting' | 'erp';
 
@@ -13,6 +11,7 @@ interface LegalFormRef {
 interface Company {
   schemaVersion: 1;
   id: string;
+  /** ISO timestamp. */
   createdAt: string;
   identity: {
     legalName: string;
@@ -22,6 +21,7 @@ interface Company {
     siren: string;
     nic: string;
     siret: string;
+    /** ISO date. */
     creationDate: string;
     rcs: string;
   };
@@ -32,6 +32,7 @@ interface Company {
     nafCodeRev2: string;
     nafLabelRev2: string;
     nafFamily: string;
+    /** Euros; null for legal forms without share capital. */
     shareCapital: number | null;
     headcountBand: { code: string; label: string };
     vatRegime: string;
@@ -78,6 +79,7 @@ interface Company {
     branchCode: string;
     accountNumber: string;
     ribKey: string;
+    /** Without spaces. */
     iban: string;
     bic: string;
   };
@@ -101,7 +103,7 @@ interface Company {
   };
 }
 
-/** Static data loaded once by the background (extension/data/fr). */
+/** Contents of extension/data/fr. */
 interface CompanyData {
   naf: NafEntry[];
   legalForms: LegalFormEntry[];
@@ -157,13 +159,12 @@ interface DepartmentEntry {
 /** [INSEE code, name, postal code(s), population, latitude, longitude] */
 type CommuneRow = [string, string, string | string[], number, number, number];
 
-/** Access to the static data, with communes loaded per department. */
 interface CompanyDataSource {
   load(): Promise<CompanyData>;
   communes(departmentCode: string): Promise<CommuneRow[]>;
 }
 
-/** A field type of the detection vocabulary (extension/vocab/fr.js). */
+/** Entry of extension/vocab/fr.js. */
 interface CffFieldType {
   id: string;
   category: 'strong' | 'address' | 'generic';
