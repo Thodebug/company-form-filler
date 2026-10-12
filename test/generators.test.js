@@ -344,3 +344,57 @@ describe('company locks', () => {
     assert.ok(generator.isCompany(company));
   });
 });
+
+describe('store', () => {
+  const { get: getStore } = loadScripts([...GENERATOR_SCRIPTS, 'background/store.js']);
+  const CffStore = getStore('CffStore');
+
+  it('never overwrites a stored state it could not read, and reads it again later', async () => {
+    let reads = 0;
+    /** @type {Record<string, unknown>[]} */
+    const writes = [];
+    const area = {
+      async get() {
+        reads++;
+        // Unreadable for the first two reads: the first get and the update.
+        if (reads <= 2) {
+          throw new Error('storage unavailable');
+        }
+        return { cff: { theme: 'dark', favorites: [], history: [] } };
+      },
+      async set(/** @type {Record<string, unknown>} */ items) {
+        writes.push(items);
+      },
+      async remove() {},
+    };
+    const store = CffStore.createStore(area);
+    const first = await store.get();
+    assert.equal(first.theme, 'system');
+    assert.equal(store.failed, true);
+    await store.update((/** @type {CffStoredState} */ state) => {
+      state.theme = 'light';
+      return state;
+    });
+    assert.equal(writes.length, 0, 'nothing written over the unread state');
+    const second = await store.get();
+    assert.equal(second.theme, 'dark');
+    assert.equal(store.failed, false);
+  });
+
+  it('drops invalid stored values', () => {
+    const state = CffStore.sanitize({
+      last: { id: 'x' },
+      history: [null, 'text'],
+      favorites: [{ company: {}, label: 'x' }],
+      locks: ['address', 'nope'],
+      theme: 'neon',
+      onboardingDismissed: 'yes',
+    });
+    assert.equal(state.last, null);
+    assert.equal(state.history.length, 0);
+    assert.equal(state.favorites.length, 0);
+    assert.deepEqual([...state.locks], ['address']);
+    assert.equal(state.theme, 'system');
+    assert.equal(state.onboardingDismissed, false);
+  });
+});

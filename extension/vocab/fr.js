@@ -259,7 +259,6 @@ const CffVocab = (() => {
       category: 'generic',
       keywords: [/\b(portable|mobile|gsm|cellulaire|cell( phone)?)\b/],
       blockers: [/\b(app|application)\b/],
-      autocomplete: ['tel-national', 'tel'],
     },
     {
       id: 'phone',
@@ -286,6 +285,7 @@ const CffVocab = (() => {
         /\bhomepage\b/,
         /\bwww\b/,
       ],
+      blockers: [/\b(code|ref|reference|id|identifiant|numero)\b/],
       autocomplete: ['url'],
       inputTypes: ['url'],
     },

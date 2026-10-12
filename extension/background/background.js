@@ -40,13 +40,25 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
   }
 
   /**
+   * @param {number} tabId
+   * @returns {Promise<boolean>}
+   */
+  async function tabExists(tabId) {
+    try {
+      return Boolean(await api.tabs.get(tabId));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Makes a company the one of a tab and, outside private windows, the last
    * company; a new company also enters the history.
    * @param {Company} company
    * @param {{ tabId: number | null, incognito: boolean, isNew: boolean }} target
    */
   async function adopt(company, target) {
-    if (target.tabId !== null) {
+    if (target.tabId !== null && (await tabExists(target.tabId))) {
       await tabs.setCompany(target.tabId, company);
     }
     if (target.incognito) {
@@ -76,7 +88,6 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
     const refresh = menusApi.refresh.bind(menusApi);
     let shownInstance = 0;
     let nextInstance = 1;
-    let entriesVisible = false;
 
     menusApi.onShown.addListener(
       /**
@@ -99,12 +110,13 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
           verdict = response && response.verdict ? response.verdict : null;
         }
         const state = menus.stateFor(verdict, Boolean(await tabs.getCompany(tab.id)));
-        if (instance !== shownInstance || (!state.root.visible && !entriesVisible)) {
+        if (instance !== shownInstance) {
           return;
         }
-        entriesVisible = state.root.visible;
+        // Always applied, even when everything is hidden: the event page may
+        // have slept since the entries were last shown.
         await menus.apply(state);
-        if (instance === shownInstance) {
+        if (instance === shownInstance && state.root.visible) {
           refresh();
         }
       },
@@ -112,10 +124,7 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
 
     menusApi.onHidden.addListener(() => {
       shownInstance = 0;
-      if (entriesVisible) {
-        entriesVisible = false;
-        menus.hideAll();
-      }
+      menus.hideAll();
     });
   }
 
@@ -188,7 +197,31 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
         // The tab closed in the meantime.
       }
     }
-    await api.tabs.create({ url: api.runtime.getURL(`${VIEWER_PATH}${query}`) });
+    // The viewer never opens in a private window: what it does is recorded.
+    const windowId = await normalWindowId();
+    await api.tabs.create({
+      url: api.runtime.getURL(`${VIEWER_PATH}${query}`),
+      ...(windowId === null ? {} : { windowId }),
+    });
+  }
+
+  /**
+   * A normal (non private) browser window, the focused one first.
+   * @returns {Promise<number | null>}
+   */
+  async function normalWindowId() {
+    if (!api.windows || typeof api.windows.getAll !== 'function') {
+      return null;
+    }
+    try {
+      const windows = (await api.windows.getAll({ windowTypes: ['normal'] })).filter(
+        (window) => !window.incognito && window.id !== undefined,
+      );
+      const chosen = windows.find((window) => window.focused) || windows[0];
+      return chosen ? /** @type {number} */ (chosen.id) : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -286,7 +319,8 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
       case 'cff:open-viewer':
         return openViewer();
       case 'cff:viewer-hello':
-        return typeof request.tabId === 'number' ? tabs.setViewerTab(request.tabId) : null;
+        // The viewer's own activation may have been taken for a web tab.
+        return typeof request.tabId === 'number' ? tabs.registerViewerTab(request.tabId) : null;
       default:
         return null;
     }
@@ -331,7 +365,7 @@ if (typeof importScripts === 'function' && typeof CffCompany === 'undefined') {
   });
 
   api.tabs.onRemoved.addListener((tabId) => {
-    tabs.clearCompany(tabId);
+    tabs.forgetTab(tabId);
   });
 
   api.tabs.onActivated.addListener(async ({ tabId }) => {

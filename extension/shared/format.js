@@ -439,8 +439,12 @@ const CffFormat = (() => {
     /** @param {string} phone */
     phone: (phone) => phoneVariants(phone)[1],
     date: frenchDate,
-    /** @param {number | null} amount */
-    euros: (amount) => (amount === null ? 'Sans capital' : `${groupThousands(amount)} €`),
+    /**
+     * @param {number | null} amount
+     * @param {string} [noneLabel] Text when there is no amount.
+     */
+    euros: (amount, noneLabel = '') =>
+      amount === null ? noneLabel : `${groupThousands(amount)} €`,
     /** @param {Company} company */
     fullAddress: (company) => fullAddress(company, true),
   };

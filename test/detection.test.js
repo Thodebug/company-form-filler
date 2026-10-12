@@ -339,3 +339,14 @@ describe('findBlock on the demo page', () => {
     }
   });
 });
+
+describe('isVisible', () => {
+  it('keeps the hidden input of a visible masked input component', () => {
+    const { window, get } = loadPage(
+      '<p-inputmask mask="999 999 999"><input id="m" style="display:none"></p-inputmask><input id="h" style="display:none">',
+    );
+    const detection = get('CffDetection');
+    assert.equal(detection.isVisible(window.document.getElementById('m')), true);
+    assert.equal(detection.isVisible(window.document.getElementById('h')), false);
+  });
+});

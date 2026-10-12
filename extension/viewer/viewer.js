@@ -46,7 +46,10 @@
         { key: 'nafLabel' },
         { key: 'nafCodeRev2', mono: true },
         { key: 'nafLabelRev2' },
-        { key: 'shareCapital', format: (c) => display.euros(c.tax.shareCapital) },
+        {
+          key: 'shareCapital',
+          format: (c) => display.euros(c.tax.shareCapital, t('viewerNoCapital')),
+        },
         { key: 'headcountBand', format: (c) => c.tax.headcountBand.label },
         { key: 'vatRegime' },
         { key: 'vatCode', mono: true },
@@ -185,6 +188,7 @@
         'aria-pressed': String(locked),
         title: `${t(locked ? 'viewerUnlock' : 'viewerLock')}. ${t('viewerLockHint')}`,
         'aria-label': `${t(locked ? 'viewerUnlock' : 'viewerLock')} : ${title}`,
+        'data-focus-key': `lock-${section.group}`,
       },
       [icon(locked ? ICONS.lockClosed : ICONS.lockOpen)],
     );
@@ -201,6 +205,7 @@
             type: 'button',
             class: field.mono ? 'value mono' : 'value',
             title: t('viewerCopyHint'),
+            'data-focus-key': `value-${section.group}-${field.key}`,
           },
           [text],
         );
@@ -283,7 +288,7 @@
   /**
    * @param {string} label
    * @param {() => void} onClick
-   * @param {{ title?: string, danger?: boolean, pressed?: boolean, disabled?: boolean }} [options]
+   * @param {{ title?: string, danger?: boolean, pressed?: boolean, disabled?: boolean, focusKey?: string }} [options]
    */
   function smallButton(label, onClick, options = {}) {
     const button = h(
@@ -294,6 +299,7 @@
         title: options.title,
         'aria-pressed': options.pressed === undefined ? undefined : String(options.pressed),
         disabled: options.disabled,
+        'data-focus-key': options.focusKey,
       },
       [label],
     );
@@ -322,7 +328,10 @@
             isCurrent ? `${t('viewerCurrent')} | ${metaOf(company)}` : metaOf(company),
           ]),
           h('div', { class: 'entry-actions' }, [
-            smallButton(t('viewerUse'), () => use(company.id), { title: t('viewerUseHint') }),
+            smallButton(t('viewerUse'), () => use(company.id), {
+              title: t('viewerUseHint'),
+              focusKey: `history-${company.id}-use`,
+            }),
             smallButton(
               t(isFavorite ? 'viewerFavoriteRemove' : 'viewerFavoriteAdd'),
               () => setFavorite(company.id, !isFavorite),
@@ -330,9 +339,12 @@
                 pressed: isFavorite,
                 disabled: full && !isFavorite,
                 title: full && !isFavorite ? t('viewerFavoritesFull') : undefined,
+                focusKey: `history-${company.id}-favorite`,
               },
             ),
-            smallButton(t('viewerDelete'), () => removeFromHistory(company.id)),
+            smallButton(t('viewerDelete'), () => removeFromHistory(company.id), {
+              focusKey: `history-${company.id}-delete`,
+            }),
           ]),
         ]);
       }),
@@ -356,6 +368,7 @@
           value: label,
           placeholder: t('viewerLabelPlaceholder'),
           'aria-label': `${t('viewerLabelPlaceholder')} : ${company.identity.legalName}`,
+          'data-focus-key': `favorite-${company.id}-label`,
         });
         input.addEventListener('change', () => setFavorite(company.id, true, input.value));
         const isCurrent = Boolean(state.last && state.last.id === company.id);
@@ -364,8 +377,13 @@
           h('div', { class: 'entry-meta' }, [metaOf(company)]),
           input,
           h('div', { class: 'entry-actions' }, [
-            smallButton(t('viewerUse'), () => use(company.id), { title: t('viewerUseHint') }),
-            smallButton(t('viewerFavoriteRemove'), () => setFavorite(company.id, false)),
+            smallButton(t('viewerUse'), () => use(company.id), {
+              title: t('viewerUseHint'),
+              focusKey: `favorite-${company.id}-use`,
+            }),
+            smallButton(t('viewerFavoriteRemove'), () => setFavorite(company.id, false), {
+              focusKey: `favorite-${company.id}-remove`,
+            }),
           ]),
         ]);
       }),
@@ -380,17 +398,49 @@
     byId('panel-favorites').hidden = history;
   }
 
+  /**
+   * Re-renders the page, keeping the keyboard focus on the same control (or
+   * on its list when the control is gone) and leaving a favorite label being
+   * typed untouched.
+   */
   function render() {
     const state = view.state;
     if (!state) {
       return;
     }
+    const active = document.activeElement;
+    const focusKey = active ? active.getAttribute('data-focus-key') : null;
+    const editingLabel = Boolean(
+      active && active.closest('#favorites-list') && active.localName === 'input',
+    );
     applyTheme(state.theme);
     renderHeader(state);
     renderSheet(state);
     renderHistory(state);
-    renderFavorites(state);
+    if (!editingLabel) {
+      renderFavorites(state);
+    }
     renderTabs();
+    if (focusKey && document.activeElement !== active) {
+      restoreFocus(focusKey);
+    }
+  }
+
+  /**
+   * @param {string} focusKey
+   */
+  function restoreFocus(focusKey) {
+    const same = document.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`);
+    if (same instanceof HTMLElement) {
+      same.focus();
+      return;
+    }
+    // The entry was removed: focus the first control of its list.
+    const listId = focusKey.startsWith('history-') ? 'history-list' : 'favorites-list';
+    const fallback = byId(listId).querySelector('button, input') || byId(`tab-${view.tab}`);
+    if (fallback instanceof HTMLElement) {
+      fallback.focus();
+    }
   }
 
   async function refresh() {
@@ -412,7 +462,16 @@
   async function use(companyId) {
     await send({ type: 'cff:use', companyId });
     await refresh();
+    announceCompany();
     window.scrollTo({ top: 0 });
+  }
+
+  /** Tells screen readers which company the sheet now shows. */
+  function announceCompany() {
+    const company = view.state && view.state.last;
+    if (company) {
+      announce(`${t('viewerTitle')} : ${company.identity.legalName}`);
+    }
   }
 
   /**
@@ -453,6 +512,7 @@
     byId('new-company').addEventListener('click', async () => {
       await send({ type: 'cff:generate', useLocks: true });
       await refresh();
+      announceCompany();
     });
     byId('favorite').addEventListener('click', () => {
       const company = view.state && view.state.last;

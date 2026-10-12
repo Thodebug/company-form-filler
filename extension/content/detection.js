@@ -134,9 +134,8 @@ const CffDetection = (() => {
   }
 
   /**
-   * Whether the user can see the element. Uses checkVisibility() and the
-   * layout boxes when the browser provides them; otherwise falls back to
-   * computed styles of the element and its composed ancestors.
+   * Whether the user can see the element: not hidden, displayed with a
+   * non-empty box, or the real input of a visible masked input component.
    * @param {Element} element
    * @returns {boolean}
    */
@@ -144,12 +143,35 @@ const CffDetection = (() => {
     if (element.closest('[aria-hidden="true"], [hidden]')) {
       return false;
     }
+    if (isRendered(element)) {
+      return true;
+    }
+    // A masked input component may hide its real input behind a visible
+    // host carrying the mask (acquired in v1).
+    for (let current = composedParent(element), depth = 0; current && depth < 3; depth++) {
+      if (Array.from(current.attributes).some((attribute) => /mask/i.test(attribute.name))) {
+        return isRendered(current);
+      }
+      current = composedParent(current);
+    }
+    return false;
+  }
+
+  /**
+   * Whether an element is displayed with a non-empty box. Uses
+   * checkVisibility() and the layout boxes when the browser provides them;
+   * otherwise (no layout, as in tests) falls back to computed styles of the
+   * element and its composed ancestors.
+   * @param {Element} element
+   * @returns {boolean}
+   */
+  function isRendered(element) {
     const withVisibility =
       /** @type {Element & { checkVisibility?: (options?: object) => boolean }} */ (element);
     if (typeof withVisibility.checkVisibility === 'function') {
       return (
         withVisibility.checkVisibility({ visibilityProperty: true }) &&
-        element.getClientRects().length > 0
+        Array.from(element.getClientRects()).some((rect) => rect.width > 0 && rect.height > 0)
       );
     }
     const view = element.ownerDocument.defaultView;
@@ -244,7 +266,7 @@ const CffDetection = (() => {
   }
 
   /**
-   * @typedef {{ text: string, weight: number }} Source
+   * @typedef {{ text: string, weight: number, placeholder?: boolean }} Source
    */
 
   /**
@@ -259,10 +281,12 @@ const CffDetection = (() => {
     /**
      * @param {string | null | undefined} text
      * @param {number} weight
+     * @param {boolean} [placeholder] An example value ("nom@exemple.fr"): it
+     *   says nothing about whose value the field holds.
      */
-    const add = (text, weight) => {
+    const add = (text, weight, placeholder = false) => {
       if (text && text.trim()) {
-        sources.push({ text: normalize(text), weight });
+        sources.push({ text: normalize(text), weight, placeholder });
       }
     };
     /**
@@ -278,7 +302,7 @@ const CffDetection = (() => {
     };
 
     for (const name of STRONG_ATTRIBUTES) {
-      add(field.getAttribute(name), WEIGHT_STRONG);
+      add(field.getAttribute(name), WEIGHT_STRONG, name === 'placeholder');
     }
     for (const name of WEAK_ATTRIBUTES) {
       add(field.getAttribute(name), WEIGHT_WEAK);
@@ -568,7 +592,9 @@ const CffDetection = (() => {
     }
     /** @param {RegExp[]} patterns */
     const mentions = (patterns) =>
-      sources.some((source) => patterns.some((pattern) => pattern.test(source.text)));
+      sources.some(
+        (source) => !source.placeholder && patterns.some((pattern) => pattern.test(source.text)),
+      );
     if (type === 'email' && mentions([CffVocab.PERSON_WORDS])) {
       return 'managerEmail';
     }

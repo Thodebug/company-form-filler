@@ -84,6 +84,12 @@ interface CffTab {
   active?: boolean;
 }
 
+interface CffWindow {
+  id?: number;
+  focused?: boolean;
+  incognito?: boolean;
+}
+
 interface CffMessageSender {
   tab?: CffTab;
   frameId?: number;
@@ -114,7 +120,7 @@ interface CffExtensionApi {
   tabs: {
     sendMessage(tabId: number, message: unknown, options?: { frameId?: number }): Promise<any>;
     query(query: { active?: boolean; currentWindow?: boolean }): Promise<CffTab[]>;
-    create(properties: { url: string; active?: boolean }): Promise<CffTab>;
+    create(properties: { url: string; active?: boolean; windowId?: number }): Promise<CffTab>;
     update(tabId: number, properties: { active?: boolean }): Promise<CffTab>;
     get(tabId: number): Promise<CffTab>;
     getCurrent(): Promise<CffTab | undefined>;
@@ -123,6 +129,7 @@ interface CffExtensionApi {
   };
   windows?: {
     update(windowId: number, properties: { focused?: boolean }): Promise<unknown>;
+    getAll(query?: { windowTypes?: string[] }): Promise<CffWindow[]>;
   };
   storage: {
     local: CffStorageArea;

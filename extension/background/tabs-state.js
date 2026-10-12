@@ -15,6 +15,7 @@ const CffTabs = (() => {
   const PRIVATE_LAST = 'privateLast';
   const VIEWER_TAB = 'viewerTab';
   const LAST_WEB_TAB = 'lastWebTab';
+  const PREVIOUS_WEB_TAB = 'previousWebTab';
 
   /**
    * Fallback when storage.session is missing: a plain map, lost when the
@@ -112,18 +113,42 @@ const CffTabs = (() => {
         const value = await read(VIEWER_TAB);
         return typeof value === 'number' ? value : null;
       },
-      /** @param {number | null} tabId */
-      setViewerTab(tabId) {
-        return write(VIEWER_TAB, tabId);
-      },
       /** @returns {Promise<number | null>} */
       async getLastWebTab() {
         const value = await read(LAST_WEB_TAB);
         return typeof value === 'number' ? value : null;
       },
-      /** @param {number | null} tabId */
-      setLastWebTab(tabId) {
-        return write(LAST_WEB_TAB, tabId);
+      /** @param {number} tabId */
+      async setLastWebTab(tabId) {
+        const last = await read(LAST_WEB_TAB);
+        if (last !== tabId) {
+          await write(PREVIOUS_WEB_TAB, typeof last === 'number' ? last : null);
+          await write(LAST_WEB_TAB, tabId);
+        }
+      },
+      /**
+       * Records the viewer tab. Its activation came before it could say who
+       * it was, and was taken for a web tab: the previous web tab is restored.
+       * @param {number} tabId
+       */
+      async registerViewerTab(tabId) {
+        await write(VIEWER_TAB, tabId);
+        if ((await read(LAST_WEB_TAB)) === tabId) {
+          await write(LAST_WEB_TAB, await read(PREVIOUS_WEB_TAB));
+          await write(PREVIOUS_WEB_TAB, null);
+        }
+      },
+      /**
+       * Forgets everything about a closed tab.
+       * @param {number} tabId
+       */
+      async forgetTab(tabId) {
+        await write(TAB_PREFIX + tabId, null);
+        for (const key of [LAST_WEB_TAB, PREVIOUS_WEB_TAB, VIEWER_TAB]) {
+          if ((await read(key)) === tabId) {
+            await write(key, null);
+          }
+        }
       },
     };
   }

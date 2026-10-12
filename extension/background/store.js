@@ -87,8 +87,12 @@ const CffStore = (() => {
    * @param {CffStorageArea} area storage.local
    */
   function createStore(area) {
+    /** State read from storage, or changed since a successful read. */
     /** @type {CffStoredState | null} */
     let memory = null;
+    /** State used while storage cannot be read: never written back. */
+    /** @type {CffStoredState | null} */
+    let fallback = null;
     let failed = false;
 
     /** @returns {Promise<CffStoredState>} */
@@ -99,21 +103,30 @@ const CffStore = (() => {
       try {
         const stored = await area.get(STORAGE_KEY);
         memory = sanitize(stored[STORAGE_KEY]);
+        fallback = null;
         failed = false;
+        return memory;
       } catch {
-        memory = defaults();
+        // Retried on the next call. Until then the extension works in memory,
+        // and nothing is saved: saving would overwrite the stored favorites.
         failed = true;
+        fallback = fallback || defaults();
+        return fallback;
       }
-      return memory;
     }
 
     /**
-     * Applies a change and saves the result.
+     * Applies a change and saves the result, unless the stored state could
+     * not be read.
      * @param {(state: CffStoredState) => CffStoredState} change
      * @returns {Promise<CffStoredState>}
      */
     async function update(change) {
       const next = change(structuredClone(await get()));
+      if (!memory) {
+        fallback = next;
+        return next;
+      }
       memory = next;
       try {
         await area.set({ [STORAGE_KEY]: next });

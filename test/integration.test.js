@@ -100,6 +100,10 @@ function createEnvironment({ firefox, incognito = false }) {
   const stats = { refreshes: 0 };
   /** @type {string[]} */
   const createdTabs = [];
+  /** @type {Array<number | undefined>} */
+  const createdInWindows = [];
+  /** @type {Set<number>} */
+  const closedTabs = new Set();
   const local = createArea();
   const session = createArea();
   const pageUrl = 'https://example.test/form';
@@ -198,14 +202,18 @@ function createEnvironment({ firefox, incognito = false }) {
         async query() {
           return [{ id: TAB_ID, incognito, windowId: 1 }];
         },
-        async create(/** @type {{ url: string }} */ properties) {
+        async create(/** @type {{ url: string, windowId?: number }} */ properties) {
           createdTabs.push(properties.url);
-          return { id: 99, windowId: 1 };
+          createdInWindows.push(properties.windowId);
+          return { id: 99, windowId: properties.windowId ?? 1 };
         },
         async update(/** @type {number} */ tabId) {
           return { id: tabId, windowId: 1 };
         },
         async get(/** @type {number} */ tabId) {
+          if (closedTabs.has(tabId)) {
+            throw new Error(`No tab with id: ${tabId}`);
+          }
           return { id: tabId, windowId: 1 };
         },
         async getCurrent() {
@@ -214,7 +222,16 @@ function createEnvironment({ firefox, incognito = false }) {
         onActivated: event(listeners.activated),
         onRemoved: event(listeners.removed),
       },
-      windows: { async update() {} },
+      windows: {
+        async update() {},
+        async getAll() {
+          // A focused private window and a normal one.
+          return [
+            { id: 5, focused: true, incognito: true },
+            { id: 6, focused: false, incognito: false },
+          ];
+        },
+      },
       storage: { local, session, onChanged: event([]) },
     };
   }
@@ -267,6 +284,8 @@ function createEnvironment({ firefox, incognito = false }) {
     local,
     session,
     createdTabs,
+    createdInWindows,
+    closedTabs,
     menu: (/** @type {string} */ id) => items.get(id),
     stored: () => /** @type {CffStoredState} */ (local.values.get('cff')),
     banner: () => {
@@ -459,6 +478,16 @@ describe('Firefox path', () => {
     assert.equal(env.stats.refreshes, 0);
   });
 
+  it('hides entries left visible by a previous instance of the event page', async () => {
+    const env = createEnvironment({ firefox: true });
+    await env.install();
+    for (const id of ['cff-root', 'cff-field', 'cff-form-new']) {
+      Object.assign(/** @type {Record<string, unknown>} */ (env.menu(id)), { visible: true });
+    }
+    await env.showMenu(env.input('mail'));
+    assert.deepEqual(visibleEntries(env), []);
+  });
+
   it('fills the target element of the click', async () => {
     const env = createEnvironment({ firefox: true });
     await env.install();
@@ -545,14 +574,45 @@ describe('popup and viewer requests', () => {
 
   it('targets the last web tab from the viewer', async () => {
     const env = createEnvironment({ firefox: false });
-    await env.request({ type: 'cff:viewer-hello', tabId: 99 });
+    // As in a browser: the viewer tab is activated before it can say who it is.
     for (const fn of env.listeners.activated) {
       await fn({ tabId: TAB_ID, windowId: 1 });
       await fn({ tabId: 99, windowId: 1 });
     }
+    await env.request({ type: 'cff:viewer-hello', tabId: 99 });
     const company = await env.request({ type: 'cff:generate', useLocks: true });
     const state = await env.request({ type: 'cff:get-state' });
     assert.equal(state.tabCompany.id, company.id);
+
+    // Back to the viewer later: it is known now and never becomes the target.
+    for (const fn of env.listeners.activated) {
+      await fn({ tabId: TAB_ID, windowId: 1 });
+      await fn({ tabId: 99, windowId: 1 });
+    }
+    assert.equal((await env.request({ type: 'cff:get-state' })).tabCompany.id, company.id);
+  });
+
+  it('forgets a closed tab and never targets it', async () => {
+    const env = createEnvironment({ firefox: false });
+    for (const fn of env.listeners.activated) {
+      await fn({ tabId: TAB_ID, windowId: 1 });
+    }
+    await env.request({ type: 'cff:generate', useLocks: true });
+    env.closedTabs.add(TAB_ID);
+    for (const fn of env.listeners.removed) {
+      await fn(TAB_ID);
+    }
+    await flush(5);
+    assert.equal(env.session.values.size, 0, [...env.session.values.keys()].join());
+    const company = await env.request({ type: 'cff:generate', useLocks: true });
+    assert.equal(env.stored().last?.id, company.id);
+    assert.equal(env.session.values.size, 0, 'no orphan tab company');
+  });
+
+  it('opens the viewer in a normal window, never in a private one', async () => {
+    const env = createEnvironment({ firefox: false });
+    await env.request({ type: 'cff:open-viewer' });
+    assert.deepEqual(env.createdInWindows, [6]);
   });
 
   it('writes nothing to disk in private windows', async () => {

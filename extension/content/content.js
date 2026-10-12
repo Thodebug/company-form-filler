@@ -65,6 +65,8 @@
   /** @type {Element | null} */
   let lastTarget = null;
   let lastRightPress = 0;
+  /** The fill focuses each field in turn: those focus events are not the user's. */
+  let filling = false;
 
   /** Values replaced by the last fill of this frame. */
   /** @type {CffUndoEntry[]} */
@@ -294,7 +296,14 @@
       fields = block.fields;
       mode = block.qualification;
     }
-    const result = await CffFill.fill(fields, company, { mode, focusBack: element });
+    filling = true;
+    /** @type {Awaited<ReturnType<typeof CffFill.fill>>} */
+    let result;
+    try {
+      result = await CffFill.fill(fields, company, { mode, focusBack: element });
+    } finally {
+      filling = false;
+    }
     if (result.undo.length) {
       pendingUndo = result.undo;
     }
@@ -345,7 +354,7 @@
     window.addEventListener(
       'focusin',
       () => {
-        if (Date.now() - lastRightPress < POINTER_FOCUS_WINDOW_MS) {
+        if (filling || Date.now() - lastRightPress < POINTER_FOCUS_WINDOW_MS) {
           return;
         }
         const element = deepActiveElement();
