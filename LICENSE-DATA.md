@@ -21,11 +21,11 @@ Notes :
 - Les communes créées après 2018, absentes des contours IGN de 2018, prennent le centre moyen
   de leurs communes déléguées, ou à défaut celui de leur département (42 communes).
 - Les arrondissements de Paris, Lyon et Marseille partagent le centre de leur ville.
-- La correspondance entre NAF 2025 et NAF rév. 2 de chaque sous-classe sélectionnée a été
-  établie à la main à partir des libellés officiels. Seules des sous-classes dont l'équivalent
-  rév. 2 est sans ambiguïté ont été retenues. À vérifier contre la
-  [table de correspondance de l'INSEE](https://www.insee.fr/fr/information/8617910) à chaque
-  mise à jour.
+- Chaque sous-classe NAF 2025 sélectionnée, son libellé et son équivalent rév. 2 ont été
+  vérifiés en octobre 2026 contre la
+  [table de correspondance de l'INSEE](https://www.insee.fr/fr/information/8617910)
+  (`Correspondances_NAFrev2-NAF2025.xlsx`, édition de janvier 2026). À revérifier à chaque
+  mise à jour de la nomenclature.
 
 ## Données saisies à la main
 
