@@ -162,3 +162,13 @@ interface CompanyDataSource {
   load(): Promise<CompanyData>;
   communes(departmentCode: string): Promise<CommuneRow[]>;
 }
+
+/** A field type of the detection vocabulary (extension/vocab/fr.js). */
+interface CffFieldType {
+  id: string;
+  category: 'strong' | 'address' | 'generic';
+  keywords: RegExp[];
+  blockers?: RegExp[];
+  autocomplete?: string[];
+  inputTypes?: string[];
+}

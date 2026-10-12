@@ -73,8 +73,16 @@ export function loadPage(html, options = {}) {
     url: options.url || 'https://example.test/',
     pretendToBeVisual: true,
   });
+  // Scripts run as classic scripts (not eval) so that their top-level
+  // constants are shared, as in a real frame.
+  const context = dom.getInternalVMContext();
   for (const script of options.scripts || CONTENT_LIBRARIES) {
-    dom.window.eval(readProjectFile(`extension/${script}`));
+    new vm.Script(readProjectFile(`extension/${script}`), { filename: script }).runInContext(
+      context,
+    );
   }
-  return { window: dom.window, get: (name) => dom.window.eval(name) };
+  return {
+    window: dom.window,
+    get: (name) => new vm.Script(name).runInContext(context),
+  };
 }

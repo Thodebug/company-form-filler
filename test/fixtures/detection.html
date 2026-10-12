@@ -6,44 +6,46 @@
   </head>
   <body>
     <!--
-      Each field carries data-expected: 14 (SIRET entry), 9 (SIREN entry) or
-      0 (no entry). Descriptions live in comments because comments are not
+      Each control carries data-expected: the field type it must be recognized
+      as, or "none". Descriptions live in comments because comments are not
       part of textContent and therefore never influence detection.
     -->
     <form>
       <!-- SIRET: label for, camelCase name -->
       <div class="row">
         <label for="s1">N° SIRET</label>
-        <input id="s1" name="companySiret" data-expected="14" />
+        <input id="s1" name="companySiret" data-expected="siret" />
       </div>
 
       <!-- SIRET: wrapping label -->
       <div class="row">
-        <label>SIRET de l'établissement <input name="f2" type="text" data-expected="14" /></label>
+        <label
+          >SIRET de l'établissement <input name="f2" type="text" data-expected="siret"
+        /></label>
       </div>
 
       <!-- SIRET: name only -->
-      <div class="row"><input name="siret" data-expected="14" /></div>
+      <div class="row"><input name="siret" data-expected="siret" /></div>
 
       <!-- SIRET: aria-label -->
-      <div class="row"><input aria-label="Numéro SIRET" data-expected="14" /></div>
+      <div class="row"><input aria-label="Numéro SIRET" data-expected="siret" /></div>
 
       <!-- SIRET: Angular formcontrolname + maxlength -->
       <div class="row">
-        <input formcontrolname="siretNumber" maxlength="14" data-expected="14" />
+        <input formcontrolname="siretNumber" maxlength="14" data-expected="siret" />
       </div>
 
       <!-- SIRET: aria-labelledby -->
       <div class="row">
         <span id="l6">Siret</span>
-        <input aria-labelledby="l6" data-expected="14" />
+        <input aria-labelledby="l6" data-expected="siret" />
       </div>
 
       <!-- SIRET: table layout, label in the neighbouring cell -->
       <table>
         <tr>
           <td>SIRET</td>
-          <td><input name="f7" data-expected="14" /></td>
+          <td><input name="f7" data-expected="siret" /></td>
         </tr>
       </table>
 
@@ -51,174 +53,403 @@
       <div class="field">
         <label for="siretHost">SIRET</label>
         <p-inputmask id="siretHost" mask="999 999 999 99999">
-          <input class="p-inputtext p-component" type="text" data-expected="14" />
+          <input class="p-inputtext p-component" type="text" data-expected="siret" />
         </p-inputmask>
       </div>
 
       <!-- SIRET: English label -->
       <div class="row">
         <label for="s9">Company SIRET number</label>
-        <input id="s9" data-expected="14" />
+        <input id="s9" data-expected="siret" />
       </div>
 
       <!-- SIRET: "numero d'etablissement" with spaced length -->
       <div class="row">
         <label for="s10">Numéro d'établissement</label>
-        <input id="s10" maxlength="17" data-expected="14" />
+        <input id="s10" maxlength="17" data-expected="siret" />
       </div>
 
       <!-- SIRET: common misspelling -->
-      <div class="row"><input name="sirret" data-expected="14" /></div>
+      <div class="row"><input name="sirret" data-expected="siret" /></div>
 
       <!-- SIRET: tel input -->
-      <div class="row"><input type="tel" name="siret_client" data-expected="14" /></div>
+      <div class="row"><input type="tel" name="siret_client" data-expected="siret" /></div>
 
       <!-- SIRET: number input -->
-      <div class="row"><input type="number" id="siretNum" data-expected="14" /></div>
+      <div class="row"><input type="number" id="siretNum" data-expected="siret" /></div>
 
       <!-- SIRET: label naming both, no length clue, tie goes to SIRET -->
       <div class="row">
         <label for="s14">SIRET / SIREN</label>
-        <input id="s14" data-expected="14" />
+        <input id="s14" data-expected="siret" />
       </div>
 
       <!-- SIRET: label describing its parts -->
       <div class="row">
         <label for="s15">SIRET (SIREN + NIC)</label>
-        <input id="s15" data-expected="14" />
+        <input id="s15" data-expected="siret" />
       </div>
 
       <!-- SIRET: weak keyword (data-testid) plus length -->
-      <div class="row"><input data-testid="siret-input" maxlength="14" data-expected="14" /></div>
+      <div class="row">
+        <input data-testid="siret-input" maxlength="14" data-expected="siret" />
+      </div>
 
       <!-- SIRET: pattern -->
-      <div class="row"><input name="siret" pattern="[0-9]{14}" data-expected="14" /></div>
+      <div class="row"><input name="siret" pattern="[0-9]{14}" data-expected="siret" /></div>
 
       <!-- SIRET: placeholder shaped like a number -->
       <div class="row">
         <label for="s18">Siret</label>
-        <input id="s18" placeholder="123 456 789 00012" data-expected="14" />
+        <input id="s18" placeholder="123 456 789 00012" data-expected="siret" />
       </div>
 
       <!-- SIRET: search input, accents and uppercase -->
       <div class="row">
         <label for="s19">NUMÉRO SIRET</label>
-        <input id="s19" type="search" data-expected="14" />
+        <input id="s19" type="search" data-expected="siret" />
       </div>
 
       <!-- SIREN: label + maxlength -->
       <div class="row">
         <label for="n1">SIREN</label>
-        <input id="n1" maxlength="9" data-expected="9" />
+        <input id="n1" maxlength="9" data-expected="siren" />
       </div>
 
       <!-- SIREN: name only -->
-      <div class="row"><input name="siren" data-expected="9" /></div>
+      <div class="row"><input name="siren" data-expected="siren" /></div>
 
       <!-- SIREN: placeholder shape -->
       <div class="row">
         <label for="n3">N° SIREN</label>
-        <input id="n3" placeholder="123 456 789" data-expected="9" />
+        <input id="n3" placeholder="123 456 789" data-expected="siren" />
       </div>
 
       <!-- SIREN: label naming both, but only 9 characters fit -->
       <div class="row">
         <label for="n4">SIRET/SIREN</label>
-        <input id="n4" maxlength="9" data-expected="9" />
+        <input id="n4" maxlength="9" data-expected="siren" />
       </div>
 
       <!-- SIREN: formcontrolname -->
-      <div class="row"><input formcontrolname="numeroSiren" data-expected="9" /></div>
+      <div class="row"><input formcontrolname="numeroSiren" data-expected="siren" /></div>
 
-      <!-- Trap: VAT number -->
+      <!-- VAT number (a trap in v1) -->
       <div class="row">
         <label for="t1">N° TVA intracommunautaire</label>
-        <input id="t1" placeholder="FR12345678901" data-expected="0" />
+        <input id="t1" placeholder="FR12345678901" data-expected="vat" />
       </div>
 
-      <!-- Trap: VAT label that mentions the SIREN -->
+      <!-- VAT label that mentions the SIREN: VAT, not SIREN -->
       <div class="row">
         <label for="t2">TVA (FR + clé + SIREN)</label>
-        <input id="t2" data-expected="0" />
+        <input id="t2" data-expected="vat" />
       </div>
 
-      <!-- Trap: NIC alone -->
+      <!-- NIC alone -->
       <div class="row">
         <label for="t3">NIC</label>
-        <input id="t3" maxlength="5" data-expected="0" />
+        <input id="t3" maxlength="5" data-expected="nic" />
       </div>
 
-      <!-- Trap: section title shared by several fields -->
+      <!-- Section title shared by several fields does not leak into them -->
       <fieldset>
         <legend>Identification SIRET</legend>
         <div class="row">
           <label for="t4">Raison sociale</label>
-          <input id="t4" data-expected="0" />
+          <input id="t4" data-expected="legalName" />
         </div>
         <div class="row">
           <label for="t5">Ville</label>
-          <input id="t5" data-expected="0" />
+          <input id="t5" data-expected="city" />
         </div>
       </fieldset>
 
       <!-- Trap: no clue at all -->
-      <div class="row"><input name="field28" data-expected="0" /></div>
+      <div class="row"><input name="field28" data-expected="none" /></div>
 
       <!-- Trap: right length, no keyword -->
-      <div class="row"><input name="code" maxlength="14" data-expected="0" /></div>
+      <div class="row"><input name="code" maxlength="14" data-expected="none" /></div>
 
       <!-- Trap: read-only -->
-      <div class="row"><input name="siret" readonly data-expected="0" /></div>
+      <div class="row"><input name="siret" readonly data-expected="none" /></div>
 
       <!-- Trap: disabled -->
-      <div class="row"><input name="siret" disabled data-expected="0" /></div>
+      <div class="row"><input name="siret" disabled data-expected="none" /></div>
 
       <!-- Trap: inside a disabled fieldset -->
       <fieldset disabled>
-        <input name="siret" data-expected="0" />
+        <input name="siret" data-expected="none" />
       </fieldset>
 
       <!-- Trap: textarea -->
-      <div class="row"><textarea name="siret" data-expected="0"></textarea></div>
+      <div class="row"><textarea name="siret" data-expected="none"></textarea></div>
 
       <!-- Trap: contenteditable -->
-      <div class="row"><div contenteditable="true" id="siretEditable" data-expected="0"></div></div>
+      <div class="row">
+        <div contenteditable="true" id="siretEditable" data-expected="none"></div>
+      </div>
 
-      <!-- Trap: RCS -->
+      <!-- RCS -->
       <div class="row">
         <label for="t13">RCS</label>
-        <input id="t13" data-expected="0" />
+        <input id="t13" data-expected="rcs" />
       </div>
 
       <!-- Trap: SIRET keyword but only 9 characters fit -->
       <div class="row">
         <label for="t14">SIRET</label>
-        <input id="t14" maxlength="9" data-expected="0" />
+        <input id="t14" maxlength="9" data-expected="none" />
       </div>
 
-      <!-- Trap: email input -->
-      <div class="row"><input type="email" name="siret" data-expected="0" /></div>
+      <!-- Email input: the input type wins over the name -->
+      <div class="row"><input type="email" name="siret" data-expected="email" /></div>
 
       <!-- Trap: password input -->
-      <div class="row"><input type="password" name="siret" data-expected="0" /></div>
+      <div class="row"><input type="password" name="siret" data-expected="none" /></div>
 
       <!-- Trap: keyword only in a CSS class (weak clue) -->
-      <div class="row"><input class="siret" data-expected="0" /></div>
+      <div class="row"><input class="siret" data-expected="none" /></div>
 
-      <!-- Trap: English VAT -->
+      <!-- English VAT -->
       <div class="row">
         <label for="t18">VAT number</label>
-        <input id="t18" data-expected="0" />
+        <input id="t18" data-expected="vat" />
       </div>
 
       <!-- Trap: word containing "vat" must not block, but nothing else matches -->
       <div class="row">
         <label for="t19">Private reference</label>
-        <input id="t19" data-expected="0" />
+        <input id="t19" data-expected="none" />
       </div>
 
       <!-- Trap: hidden input -->
-      <input type="hidden" name="siret" data-expected="0" />
+      <input type="hidden" name="siret" data-expected="none" />
+      <!-- Company identity -->
+      <div class="row">
+        <label for="c1">Raison sociale</label><input id="c1" data-expected="legalName" />
+      </div>
+      <div class="row">
+        <label for="c2">Dénomination</label><input id="c2" data-expected="legalName" />
+      </div>
+      <div class="row">
+        <label for="c3">Nom de l'entreprise</label><input id="c3" data-expected="legalName" />
+      </div>
+      <div class="row">
+        <label for="c4">Company name</label><input id="c4" data-expected="legalName" />
+      </div>
+      <div class="row"><input name="company" data-expected="legalName" /></div>
+      <div class="row">
+        <input name="org" autocomplete="organization" data-expected="legalName" />
+      </div>
+      <div class="row">
+        <label for="c7">Enseigne</label><input id="c7" data-expected="tradeName" />
+      </div>
+      <div class="row">
+        <label for="c8">Nom commercial</label><input id="c8" data-expected="tradeName" />
+      </div>
+      <div class="row">
+        <label for="c9">Trade name</label><input id="c9" data-expected="tradeName" />
+      </div>
+      <div class="row">
+        <label for="c10">Forme juridique</label>
+        <select id="c10" data-expected="legalForm">
+          <option>SARL</option>
+          <option>SAS</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="c11">Legal form</label><input id="c11" data-expected="legalForm" />
+      </div>
+      <div class="row">
+        <label for="c12">Capital social</label><input id="c12" data-expected="capital" />
+      </div>
+      <div class="row">
+        <label for="c13">Share capital</label
+        ><input id="c13" type="number" data-expected="capital" />
+      </div>
+      <div class="row">
+        <label for="c14">Code NAF / APE</label><input id="c14" data-expected="naf" />
+      </div>
+      <div class="row">
+        <label for="c15">Activité principale (APE)</label><input id="c15" data-expected="naf" />
+      </div>
+      <div class="row">
+        <label for="c16">Effectif</label
+        ><select id="c16" data-expected="headcount">
+          <option>0</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="c17">Number of employees</label><input id="c17" data-expected="headcount" />
+      </div>
+      <div class="row">
+        <label for="c18">Date de création</label
+        ><input id="c18" type="date" data-expected="creationDate" />
+      </div>
+      <div class="row">
+        <label for="c19">Incorporation date</label><input id="c19" data-expected="creationDate" />
+      </div>
+      <div class="row"><label for="c20">IBAN</label><input id="c20" data-expected="iban" /></div>
+      <div class="row">
+        <label for="c21">Bank account (IBAN)</label
+        ><input id="c21" maxlength="34" data-expected="iban" />
+      </div>
+      <div class="row">
+        <label for="c22">BIC / SWIFT</label><input id="c22" data-expected="bic" />
+      </div>
+      <div class="row"><label for="c23">GLN</label><input id="c23" data-expected="gln" /></div>
+      <div class="row">
+        <label for="c24">Code société</label><input id="c24" data-expected="erpCompanyCode" />
+      </div>
+      <div class="row">
+        <label for="c25">N° de TVA intracommunautaire</label><input id="c25" data-expected="vat" />
+      </div>
+
+      <!-- Address -->
+      <div class="row">
+        <label for="a1">Adresse</label><input id="a1" data-expected="addressLine1" />
+      </div>
+      <div class="row">
+        <label for="a2">Street address</label><input id="a2" data-expected="addressLine1" />
+      </div>
+      <div class="row">
+        <input name="addr" autocomplete="address-line1" data-expected="addressLine1" />
+      </div>
+      <div class="row">
+        <label for="a4">Complément d'adresse</label><input id="a4" data-expected="addressLine2" />
+      </div>
+      <div class="row">
+        <label for="a5">Address line 2</label><input id="a5" data-expected="addressLine2" />
+      </div>
+      <div class="row">
+        <label for="a6">Code postal</label
+        ><input id="a6" maxlength="5" data-expected="postalCode" />
+      </div>
+      <div class="row">
+        <label for="a7">ZIP code</label><input id="a7" data-expected="postalCode" />
+      </div>
+      <div class="row"><input name="cp" maxlength="5" data-expected="postalCode" /></div>
+      <div class="row"><label for="a9">Ville</label><input id="a9" data-expected="city" /></div>
+      <div class="row"><label for="a10">City</label><input id="a10" data-expected="city" /></div>
+      <div class="row">
+        <label for="a11">Pays</label
+        ><select id="a11" data-expected="country">
+          <option>France</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="a12">Country</label><input id="a12" data-expected="country" />
+      </div>
+      <div class="row">
+        <label for="a13">Département</label><input id="a13" data-expected="department" />
+      </div>
+      <div class="row">
+        <label for="a14">Région</label><input id="a14" data-expected="region" />
+      </div>
+      <div class="row">
+        <label for="a15">Adresse</label><textarea id="a15" data-expected="fullAddress"></textarea>
+      </div>
+      <div class="row">
+        <label for="a16">Latitude</label><input id="a16" data-expected="latitude" />
+      </div>
+      <div class="row">
+        <label for="a17">Longitude</label><input id="a17" data-expected="longitude" />
+      </div>
+      <div class="row">
+        <label for="a18">N° de voie</label><input id="a18" data-expected="streetNumber" />
+      </div>
+      <div class="row">
+        <label for="a19">Nom de la voie</label><input id="a19" data-expected="street" />
+      </div>
+
+      <!-- Contact and people -->
+      <div class="row">
+        <label for="p1">Téléphone</label><input id="p1" type="tel" data-expected="phone" />
+      </div>
+      <div class="row"><label for="p2">Phone</label><input id="p2" data-expected="phone" /></div>
+      <div class="row">
+        <label for="p3">Téléphone portable</label
+        ><input id="p3" type="tel" data-expected="mobile" />
+      </div>
+      <div class="row"><label for="p4">Mobile</label><input id="p4" data-expected="mobile" /></div>
+      <div class="row">
+        <label for="p5">Téléphone du dirigeant</label><input id="p5" data-expected="mobile" />
+      </div>
+      <div class="row"><label for="p6">Email</label><input id="p6" data-expected="email" /></div>
+      <div class="row">
+        <label for="p7">Adresse e-mail</label><input id="p7" data-expected="email" />
+      </div>
+      <div class="row"><input type="email" name="f8" data-expected="email" /></div>
+      <div class="row">
+        <label for="p9">Email du gérant</label><input id="p9" data-expected="managerEmail" />
+      </div>
+      <div class="row">
+        <label for="p10">Site web</label><input id="p10" data-expected="website" />
+      </div>
+      <div class="row"><input type="url" name="f11" data-expected="website" /></div>
+      <div class="row">
+        <label for="p12">Civilité</label
+        ><select id="p12" data-expected="title">
+          <option>M.</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="p13">Prénom</label><input id="p13" data-expected="firstName" />
+      </div>
+      <div class="row">
+        <label for="p14">First name</label><input id="p14" data-expected="firstName" />
+      </div>
+      <div class="row"><label for="p15">Nom</label><input id="p15" data-expected="lastName" /></div>
+      <div class="row">
+        <label for="p16">Last name</label><input id="p16" data-expected="lastName" />
+      </div>
+      <div class="row">
+        <label for="p17">Nom et prénom</label><input id="p17" data-expected="fullName" />
+      </div>
+      <div class="row">
+        <label for="p18">Full name</label><input id="p18" data-expected="fullName" />
+      </div>
+      <div class="row">
+        <label for="p19">Fonction</label><input id="p19" data-expected="role" />
+      </div>
+      <div class="row">
+        <label for="p20">Job title</label><input id="p20" data-expected="role" />
+      </div>
+      <div class="row">
+        <label for="p21">Banque</label><input id="p21" data-expected="bankName" />
+      </div>
+      <div class="row">
+        <label for="p22">Référence interne</label><input id="p22" data-expected="internalRef" />
+      </div>
+      <div class="row"><label for="p23">UUID</label><input id="p23" data-expected="uuid" /></div>
+      <div class="row">
+        <label for="p24">Code établissement</label><input id="p24" data-expected="erpSiteCode" />
+      </div>
+
+      <!-- More traps -->
+      <div class="row">
+        <label for="x1">Nom d'utilisateur</label><input id="x1" data-expected="none" />
+      </div>
+      <div class="row">
+        <label for="x2">Taux de TVA</label><input id="x2" data-expected="none" />
+      </div>
+      <div class="row">
+        <label for="x3">Adresse IP</label><input id="x3" data-expected="none" />
+      </div>
+      <div class="row">
+        <label for="x4">Commentaire</label><textarea id="x4" data-expected="none"></textarea>
+      </div>
+      <div class="row">
+        <label for="x5">Rechercher</label><input id="x5" type="search" data-expected="none" />
+      </div>
+      <div class="row">
+        <label for="x6">Mot de passe</label><input id="x6" type="password" data-expected="none" />
+      </div>
+      <div class="row">
+        <label for="x7">Pays de résidence fiscale</label><input id="x7" data-expected="country" />
+      </div>
+      <div class="row"><label for="x8">Message</label><input id="x8" data-expected="none" /></div>
     </form>
   </body>
 </html>
