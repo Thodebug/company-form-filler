@@ -46,17 +46,70 @@ const CffPage = (() => {
     return answer;
   }
 
+  const THEME_KEY = 'cff-theme';
+  const PAGE_SCHEME_KEY = 'cff-page-scheme';
+  // Firefox draws popups after the browser's own theme, so their
+  // prefers-color-scheme may differ from the one of tabs. In "system" mode the
+  // popup takes the scheme last seen by the viewer, light by default.
+  const IN_POPUP = location.pathname.endsWith('/popup/popup.html');
+  const darkScheme = matchMedia('(prefers-color-scheme: dark)');
+
+  /**
+   * localStorage keeps the theme at hand before the background answers, so
+   * pages open in the right colors.
+   * @param {string} key
+   * @returns {string | null}
+   */
+  function recall(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * @param {string} key
+   * @param {string} value
+   */
+  function remember(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Storage disabled: the theme is applied once the state arrives.
+    }
+  }
+
+  function rememberPageScheme() {
+    remember(PAGE_SCHEME_KEY, darkScheme.matches ? 'dark' : 'light');
+  }
+
   /**
    * Without data-theme, theme.css follows prefers-color-scheme.
    * @param {CffTheme} theme
    */
   function applyTheme(theme) {
+    remember(THEME_KEY, theme);
+    let scheme = theme;
+    if (theme === 'system') {
+      if (IN_POPUP) {
+        scheme = recall(PAGE_SCHEME_KEY) === 'dark' ? 'dark' : 'light';
+      } else {
+        rememberPageScheme();
+      }
+    }
     const root = document.documentElement;
-    if (theme === 'light' || theme === 'dark') {
-      root.setAttribute('data-theme', theme);
+    if (scheme === 'light' || scheme === 'dark') {
+      root.setAttribute('data-theme', scheme);
     } else {
       root.removeAttribute('data-theme');
     }
+  }
+
+  const savedTheme = recall(THEME_KEY);
+  applyTheme(savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'system');
+  if (!IN_POPUP) {
+    darkScheme.addEventListener('change', rememberPageScheme);
   }
 
   /**

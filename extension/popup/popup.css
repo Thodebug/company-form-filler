@@ -32,7 +32,6 @@ body {
   gap: 2px;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   background: var(--surface);
 }

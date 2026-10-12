@@ -297,7 +297,7 @@
     "description": "Bouton du popup."
   },
   "popupReport": {
-    "message": "Signaler un champ mal reconnu",
+    "message": "Signaler un problème",
     "description": "Lien du popup."
   },
   "popupPrivate": {

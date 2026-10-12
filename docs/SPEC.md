@@ -522,7 +522,7 @@ la nomenclature INSEE.
   - « **Utiliser dans cet onglet** » : visible quand l'aperçu montre la dernière société et
     non celle de l'onglet. Il attribue cette société à l'onglet actif ;
   - « **Ouvrir la fiche** » : ouvre la fiche, ou active l'onglet qui la contient déjà.
-- **Lien « Signaler un champ mal reconnu »** : il ouvre une issue GitHub préremplie (gabarit
+- **Lien « Signaler un problème »** : il ouvre une issue GitHub préremplie (gabarit
   avec le navigateur et la version). L'URL de la page n'est **jamais** jointe.
 - **Navigation privée** : dans une fenêtre privée (si l'utilisateur a autorisé l'extension en
   privé), le popup fonctionne de la même façon. Les sociétés créées restent en

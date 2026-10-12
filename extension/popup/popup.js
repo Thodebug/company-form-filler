@@ -2,7 +2,8 @@
 
 (() => {
   const { api, t, localize, send, applyTheme, h } = CffPage;
-  const ISSUES_URL = 'https://github.com/Thodebug/company-form-filler/issues/new';
+  // The old repository name keeps redirecting after the rename.
+  const ISSUES_URL = 'https://github.com/Thodebug/siret-form-filler/issues/new';
 
   /** @type {{ tabId: number | null, incognito: boolean, mode: 'company' | 'address', state: CffViewState | null }} */
   const view = { tabId: null, incognito: false, mode: 'company', state: null };
@@ -88,19 +89,16 @@
   function reportUrl() {
     const version = api.runtime.getManifest().version;
     const body = [
-      '**Champ concerné** (libellé, et si possible extrait HTML) :',
+      '**Problème** :',
       '',
-      '**Ce qui était attendu** :',
+      '**Étapes pour le reproduire** (page, champ, action) :',
+      '',
+      '**Résultat attendu** :',
       '',
       `Version : ${version}`,
       `Navigateur : ${navigator.userAgent}`,
     ].join('\n');
-    const params = new URLSearchParams({
-      title: 'Champ mal reconnu : ',
-      body,
-      labels: 'detection',
-    });
-    return `${ISSUES_URL}?${params}`;
+    return `${ISSUES_URL}?${new URLSearchParams({ body })}`;
   }
 
   async function start() {
