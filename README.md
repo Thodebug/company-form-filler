@@ -44,13 +44,13 @@ Anciennement **SIRET Form Filler** (v1), qui ne générait que des SIRET et SIRE
 
 **Chrome et Edge 123+** :
 
-1. Téléchargez `company-form-filler-chromium-X.Y.Z.zip` depuis la
-   [dernière release](https://github.com/Thodebug/company-form-filler/releases/latest) et
-   dézippez-le.
-2. Ouvrez `chrome://extensions` (ou `edge://extensions`) et activez le mode développeur.
-3. Si la v1 (SIRET Form Filler) est installée, supprimez-la.
-4. Cliquez sur « Charger l'extension non empaquetée » et choisissez le dossier.
-5. Rechargez les onglets déjà ouverts.
+1. Télécharger `company-form-filler-chromium-X.Y.Z.zip` depuis la
+   [dernière release](https://github.com/Thodebug/company-form-filler/releases/latest) et le
+   décompresser.
+2. Ouvrir `chrome://extensions` (ou `edge://extensions`) et activer le mode développeur.
+3. Supprimer la v1 (SIRET Form Filler) si elle est installée.
+4. « Charger l'extension non empaquetée » et choisir le dossier.
+5. Recharger les onglets déjà ouverts.
 
 ## Limites
 
@@ -81,8 +81,8 @@ npm run store-images     # régénère les illustrations de la fiche AMO
 Il n'y a pas d'étape de compilation : les fichiers de `extension/` sont ceux qui sont publiés.
 `npm run build` écrit un manifeste et un zip par navigateur dans `dist/`.
 
-Un champ mal reconnu ? Ajoutez-le dans `test/fixtures/detection.html` avec
-`data-expected="<type>"`, puis ajustez `extension/vocab/fr.js`.
+Les cas de détection sont décrits dans `test/fixtures/detection.html` (`data-expected="<type>"`)
+et le vocabulaire dans `extension/vocab/fr.js`.
 
 Documentation : [spécification](docs/SPEC.md), [architecture](docs/ARCHITECTURE.md),
 [recette manuelle](docs/RECETTE.md), [sources des données](LICENSE-DATA.md).
@@ -111,10 +111,10 @@ docs/                     spécification, architecture, recette, image du README
 
 ## Publier une version
 
-Mettez la même version dans `package.json` et `extension/manifest.json`, puis poussez un tag
-`vX.Y.Z`. Le workflow crée la release GitHub avec les zips et soumet la version à AMO si les
-secrets `AMO_JWT_ISSUER` et `AMO_JWT_SECRET` sont définis. La description et les captures de
-la fiche AMO se mettent à jour à la main (`store/amo/listing.md`).
+La version de `package.json` et celle de `extension/manifest.json` doivent être identiques. Un
+tag `vX.Y.Z` déclenche le workflow de release : release GitHub avec les zips, et soumission à
+AMO si les secrets `AMO_JWT_ISSUER` et `AMO_JWT_SECRET` sont définis. La description et les
+captures de la fiche AMO se mettent à jour à la main (`store/amo/listing.md`).
 
 ## Confidentialité
 
