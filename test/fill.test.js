@@ -200,7 +200,7 @@ describe('fill', () => {
     assert.equal(byId('address3').value, '');
     assert.equal(byId('postalCode').value, company.address.postalCode);
     assert.equal(byId('city').value, company.address.city);
-    assert.equal(byId('latitude').value, String(company.address.latitude));
+    assert.equal(byId('latitude').value, company.address.latitude.toFixed(6));
     assert.equal(byId('country-input').value, 'France');
     assert.deepEqual(countryEvents, [], 'the preset country is left alone');
   });
