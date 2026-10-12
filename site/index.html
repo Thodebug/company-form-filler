@@ -14,8 +14,10 @@
   <body>
     <!--
       Read by the tests. data-expected: the type each control must be detected
-      as, or "none". data-expected-block: the qualification of the block found
-      from its first control (company, address or none).
+      as, or "none". data-expected-in-block: its type once the block is
+      qualified. data-expected-block: the qualification of the block found from
+      its first control (company, address or none). data-expected-companion: the
+      address form filled along with the block.
     -->
     <header class="top">
       <img src="favicon.svg" alt="" width="28" height="28" />
@@ -354,6 +356,96 @@
           <button type="button" class="add" id="add-field">Ajouter un champ IBAN</button>
         </form>
         <iframe src="frame.html" title="Formulaire dans un cadre" class="frame"></iframe>
+      </section>
+
+      <section class="panel">
+        <h2>8. Fiche tiers <small>adresse dans un onglet, dans un formulaire séparé</small></h2>
+        <form
+          id="third-party"
+          data-expected-block="company"
+          data-expected-companion="third-party-address"
+          onsubmit="return false;"
+        >
+          <div class="f">
+            <label for="t-code">Code</label
+            ><input
+              id="t-code"
+              name="code"
+              data-expected="none"
+              data-expected-in-block="erpCompanyCode"
+            />
+          </div>
+          <div class="f">
+            <label for="t-name">Libellé</label
+            ><input id="t-name" name="name" data-expected-in-block="legalName" />
+          </div>
+          <div class="f">
+            <label for="t-siret">N° de SIRET</label
+            ><input id="t-siret" name="siret" data-check="siret" data-expected="siret" /><span
+              class="status"
+            ></span>
+          </div>
+          <div class="f">
+            <label for="t-vat">N° de TVA intracommunautaire</label
+            ><input id="t-vat" name="vat" data-check="vat" data-expected="vat" /><span
+              class="status"
+            ></span>
+          </div>
+          <div class="f">
+            <label for="t-mail">Adresse mail</label
+            ><input
+              id="t-mail"
+              type="email"
+              placeholder="john.doe@mail.com"
+              data-expected="email"
+            />
+          </div>
+          <div class="f">
+            <label for="t-phone">Téléphone fixe</label
+            ><input id="t-phone" type="tel" placeholder="+33 1 23 45 67 89" data-expected="phone" />
+          </div>
+        </form>
+        <div class="tabs" role="tablist">
+          <span role="tab" aria-selected="true" class="tab active">Adresses</span>
+          <span role="tab" aria-selected="false" class="tab">Contacts</span>
+          <span role="tab" aria-selected="false" class="tab">Facturation</span>
+        </div>
+        <form id="third-party-address" data-expected-block="address" onsubmit="return false;">
+          <div class="f">
+            <label for="t-address-name">Libellé adresse</label
+            ><input id="t-address-name" name="name" data-expected="addressLabel" />
+          </div>
+          <div class="f">
+            <label for="t-line1">Adresse 1</label
+            ><input id="t-line1" name="address" data-expected="addressLine1" />
+          </div>
+          <div class="f">
+            <label for="t-line2">Adresse 2</label
+            ><input id="t-line2" name="address2" data-expected="addressLine2" />
+          </div>
+          <div class="f">
+            <label for="t-line3">Adresse 3</label
+            ><input id="t-line3" name="address3" data-expected="none" />
+          </div>
+          <div class="f">
+            <label for="t-country">Pays</label
+            ><input
+              id="t-country"
+              role="combobox"
+              aria-autocomplete="list"
+              value="France"
+              placeholder="Choisir un pays"
+              data-expected="country"
+            />
+          </div>
+          <div class="f">
+            <label for="t-zip">Code postal</label
+            ><input id="t-zip" name="postalCode" data-expected="postalCode" />
+          </div>
+          <div class="f">
+            <label for="t-city">Ville</label><input id="t-city" name="city" data-expected="city" />
+          </div>
+        </form>
       </section>
     </main>
 

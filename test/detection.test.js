@@ -2,6 +2,37 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { loadPage, readProjectFile } from './helpers.js';
 
+const EXPECTATIONS = [
+  'data-expected',
+  'data-expected-in-block',
+  'data-expected-block',
+  'data-expected-companion',
+];
+
+/**
+ * Reads the expectations, then removes them: detection reads data attributes
+ * and would take them as clues.
+ * @param {Document} document
+ * @returns {Map<Element, Record<string, string>>}
+ */
+function takeExpectations(document) {
+  /** @type {Map<Element, Record<string, string>>} */
+  const expectations = new Map();
+  for (const element of document.querySelectorAll(EXPECTATIONS.map((name) => `[${name}]`).join())) {
+    /** @type {Record<string, string>} */
+    const values = {};
+    for (const name of EXPECTATIONS) {
+      const value = element.getAttribute(name);
+      if (value !== null) {
+        values[name] = value;
+        element.removeAttribute(name);
+      }
+    }
+    expectations.set(element, values);
+  }
+  return expectations;
+}
+
 /**
  * @param {string} html
  * @param {string} label
@@ -10,10 +41,11 @@ import { loadPage, readProjectFile } from './helpers.js';
 function checkExpectations(html, label) {
   const { window, get } = loadPage(html);
   const detection = get('CffDetection');
-  const fields = Array.from(window.document.querySelectorAll('[data-expected]'));
+  const expectations = takeExpectations(window.document);
+  const fields = [...expectations].filter(([, values]) => 'data-expected' in values);
   assert.ok(fields.length > 0, `${label}: no field with data-expected`);
-  for (const [index, field] of fields.entries()) {
-    const expected = field.getAttribute('data-expected');
+  for (const [index, [field, values]] of fields.entries()) {
+    const expected = values['data-expected'];
     const result = detection.detectType(field);
     assert.equal(
       result.type || 'none',
@@ -322,11 +354,16 @@ describe('findBlock on the demo page', () => {
     // The demo script defines the shadow DOM components.
     window.eval(readProjectFile('site/demo.js'));
     const detection = get('CffDetection');
-    const containers = Array.from(window.document.querySelectorAll('[data-expected-block]'));
-    assert.ok(containers.length >= 8);
-    for (const container of containers) {
-      const expected = container.getAttribute('data-expected-block');
-      const first = /** @type {Element} */ (container.querySelector('[data-expected]'));
+    const expectations = takeExpectations(window.document);
+    /** @param {string} name */
+    const having = (name) => [...expectations].filter(([, values]) => name in values);
+    const containers = having('data-expected-block');
+    assert.ok(containers.length >= 10);
+    for (const [container, values] of containers) {
+      const expected = values['data-expected-block'];
+      const first = /** @type {Element} */ (
+        having('data-expected').find(([field]) => container.contains(field))?.[0]
+      );
       const block = detection.findBlock(first);
       const label = `#${container.id}`;
       if (expected === 'none') {
@@ -334,6 +371,25 @@ describe('findBlock on the demo page', () => {
       } else {
         assert.equal(block?.qualification, expected, label);
         assert.equal(block?.root, container, label);
+        for (const [field, fieldValues] of having('data-expected-in-block')) {
+          if (container.contains(field)) {
+            const found = block?.fields.find((candidate) => candidate.element === field);
+            assert.equal(found?.type, fieldValues['data-expected-in-block'], field.id);
+          }
+        }
+        const companion = values['data-expected-companion'];
+        const address = detection.companionAddress(block);
+        if (companion) {
+          assert.ok(address.length > 0, `${label}: no companion address`);
+          assert.ok(
+            address.every((/** @type {{ element: Element }} */ field) =>
+              field.element.closest(`#${companion}`),
+            ),
+            label,
+          );
+        } else {
+          assert.equal(address.length, 0, `${label}: unexpected companion address`);
+        }
       }
     }
   });

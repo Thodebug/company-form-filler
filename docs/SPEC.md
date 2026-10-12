@@ -286,8 +286,10 @@ mots bloquants, jetons `autocomplete` HTML, indices de forme, libellé de menu, 
 
 **Moteur** : chaque indice du champ ajoute son poids aux types qu'il cite.
 
-- Un même texte porté par plusieurs attributs (`id`, `name` et `formcontrolname` valant
-  `name`) ne compte qu'une fois.
+- Le libellé visible (`label`, `aria-labelledby`, texte voisin court) pèse **4**, les
+  attributs **3**, les attributs faibles (`class`, `title`, `data-*`) **2**.
+- Les identifiants d'un champ (`id`, `name`, `formcontrolname`) forment un seul indice : seul
+  le plus fort compte, et un même texte n'est compté qu'une fois.
 - `autocomplete` vaut **3** quand sa valeur est un jeton HTML standard connu.
 - Un mot-clé est obligatoire, sauf pour un jeton `autocomplete` standard.
 - Le score minimum est 3.
@@ -806,7 +808,9 @@ Il est refait de zéro et sert aussi de jeu de fixtures pour les tests :
    email, téléphone) ;
 6. cas limites : champs cachés, `maxlength` trop court (raison sociale et IBAN) ;
 7. composants : saisie masquée PrimeNG, shadow DOM ouvert et fermé, iframe, champ ajouté
-   dynamiquement, `select` avec synonymes.
+   dynamiquement, `select` avec synonymes ;
+8. fiche tiers de logiciel de gestion : « Code » et « Libellé », adresse dans un onglet et
+   un formulaire séparé, pays prérempli, troisième ligne d'adresse.
 
 ---
 
