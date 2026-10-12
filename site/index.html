@@ -3,332 +3,365 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SIRET Form Filler : page de démonstration</title>
+    <title>Company Form Filler : page de démonstration</title>
     <meta
       name="description"
-      content="Champs de test pour l'extension SIRET Form Filler : champs reconnus, pièges et cas avancés."
+      content="Formulaires de test pour l'extension Company Form Filler : fournisseur, adresses, formulaires en anglais, pièges et composants."
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="demo.css" />
   </head>
   <body>
+    <!--
+      Every control carries data-expected: the field type the extension must
+      recognize, or "none". Containers carrying data-expected-block are the
+      block the extension must find around their first control, with its
+      qualification (company, address or none). The tests read this page.
+    -->
     <header class="top">
-      <img src="favicon.svg" alt="" width="32" height="32" />
-      <h1>SIRET Form Filler</h1>
+      <img src="favicon.svg" alt="" width="28" height="28" />
+      <h1>Company Form Filler</h1>
       <span class="subtitle">Page de démonstration</span>
       <nav>
-        <a href="https://github.com/Thodebug/siret-form-filler">Code source</a>
+        <a href="https://github.com/Thodebug/company-form-filler">Code source</a>
         <a href="confidentialite.html">Confidentialité</a>
       </nav>
     </header>
 
+    <p class="intro">
+      Faites un clic droit dans un champ : le sous-menu <strong>Company Form Filler</strong> propose
+      de remplir ce champ, ou tout le formulaire avec une société ou une adresse fictive. Les coches
+      vérifient les clés de contrôle (SIRET, TVA, IBAN).
+    </p>
+
     <main class="board">
-      <section class="panel recognized">
-        <h2>Champs reconnus <small>l'entrée doit apparaître au clic droit</small></h2>
-        <form class="recognized-form" onsubmit="return false;">
+      <!-- 1. Supplier creation, split in sections -->
+      <section class="panel">
+        <h2>1. Création de fournisseur <small>formulaire en sections, rempli en entier</small></h2>
+        <form id="supplier" data-expected-block="company" onsubmit="return false;">
           <fieldset>
-            <legend>SIRET</legend>
-
+            <legend>Identité</legend>
             <div class="f">
-              <label for="d1">N° SIRET</label>
-              <input id="d1" name="siret" data-expected="14" />
-              <template>
-                <p>
-                  Attendu : SIRET. Libellé relié par <code>for</code> et
-                  <code>name</code> explicite.
-                </p>
-                <pre><code>&lt;label for="d1"&gt;N° SIRET&lt;/label&gt;
-&lt;input id="d1" name="siret"&gt;</code></pre>
-              </template>
+              <label for="s-name">Raison sociale</label
+              ><input id="s-name" data-expected="legalName" />
             </div>
-
             <div class="f">
-              <label class="wrap"
-                ><span>SIRET de l'établissement</span> <input name="f2" data-expected="14"
-              /></label>
-              <template>
-                <p>Attendu : SIRET. Le libellé englobe le champ, sans attribut <code>for</code>.</p>
-                <pre><code>&lt;label&gt;SIRET de l'établissement &lt;input name="f2"&gt;&lt;/label&gt;</code></pre>
-              </template>
+              <label for="s-trade">Enseigne</label><input id="s-trade" data-expected="tradeName" />
             </div>
-
             <div class="f">
-              <span class="caption">Sans libellé visible</span>
-              <input aria-label="Numéro SIRET" placeholder="123 456 789 00012" data-expected="14" />
-              <template>
-                <p>
-                  Attendu : SIRET. Aucun libellé visible : <code>aria-label</code> et un placeholder
-                  en forme de numéro.
-                </p>
-                <pre><code>&lt;input aria-label="Numéro SIRET" placeholder="123 456 789 00012"&gt;</code></pre>
-              </template>
+              <label for="s-form">Forme juridique</label>
+              <select id="s-form" data-expected="legalForm">
+                <option value="">Choisir</option>
+                <option value="5710">SAS</option>
+                <option value="5720">SASU</option>
+                <option value="5499">SARL</option>
+                <option value="5498">EURL</option>
+                <option value="5599">SA</option>
+                <option value="5202">SNC</option>
+                <option value="6540">SCI</option>
+                <option value="1000">Entreprise individuelle</option>
+              </select>
             </div>
-
             <div class="f">
-              <label for="d4">Identifiant (Angular)</label>
-              <input id="d4" formcontrolname="siretNumber" maxlength="14" data-expected="14" />
-              <template>
-                <p>
-                  Attendu : SIRET. Le libellé ne dit rien : le champ est reconnu par
-                  <code>formcontrolname</code> et <code>maxlength</code>.
-                </p>
-                <pre><code>&lt;input formcontrolname="siretNumber" maxlength="14"&gt;</code></pre>
-              </template>
+              <label for="s-siret">N° SIRET</label
+              ><input id="s-siret" data-check="siret" data-expected="siret" /><span
+                class="status"
+              ></span>
             </div>
-
             <div class="f">
-              <table class="cells">
-                <tr>
-                  <td>SIRET</td>
-                  <td><input name="f5" data-expected="14" /></td>
-                </tr>
-              </table>
-              <template>
-                <p>Attendu : SIRET. Le libellé est dans la cellule voisine du tableau.</p>
-                <pre><code>&lt;td&gt;SIRET&lt;/td&gt;
-&lt;td&gt;&lt;input name="f5"&gt;&lt;/td&gt;</code></pre>
-              </template>
+              <label for="s-vat">N° TVA intracommunautaire</label
+              ><input id="s-vat" data-check="vat" data-expected="vat" /><span class="status"></span>
             </div>
-
             <div class="f">
-              <label for="maskedHost">SIRET (masque)</label>
-              <p-inputmask id="maskedHost" mask="999 999 999 99999">
-                <input class="p-inputtext" placeholder="___ ___ ___ _____" data-expected="14" />
-              </p-inputmask>
-              <template>
-                <p>
-                  Attendu : SIRET. Masque de saisie façon PrimeNG : l'id et le masque sont sur
-                  l'élément hôte, pas sur l'input.
-                </p>
-                <pre><code>&lt;p-inputmask id="maskedHost" mask="999 999 999 99999"&gt;
-  &lt;input class="p-inputtext"&gt;
-&lt;/p-inputmask&gt;</code></pre>
-              </template>
+              <label for="s-naf">Code NAF / APE</label><input id="s-naf" data-expected="naf" />
             </div>
-
             <div class="f">
-              <label for="d7">SIRET (numérique)</label>
-              <input id="d7" type="number" data-expected="14" />
-              <template>
-                <p>Attendu : SIRET. Champ de type number.</p>
-                <pre><code>&lt;input id="d7" type="number"&gt;</code></pre>
-              </template>
+              <label for="s-capital">Capital social</label
+              ><input id="s-capital" type="number" data-expected="capital" />
             </div>
-
             <div class="f">
-              <label for="d8">Numéro d'établissement</label>
-              <input id="d8" maxlength="17" data-expected="14" />
-              <template>
-                <p>
-                  Attendu : SIRET. Autre nom du SIRET, longueur prévue pour 14 chiffres et 3
-                  espaces.
-                </p>
-                <pre><code>&lt;input id="d8" maxlength="17"&gt;</code></pre>
-              </template>
-            </div>
-
-            <div class="f">
-              <label for="d9">Company SIRET number</label>
-              <input id="d9" type="tel" data-expected="14" />
-              <template>
-                <p>Attendu : SIRET. Libellé en anglais, champ de type tel.</p>
-                <pre><code>&lt;input id="d9" type="tel"&gt;</code></pre>
-              </template>
+              <label for="s-created">Date de création</label
+              ><input id="s-created" type="date" data-expected="creationDate" />
             </div>
           </fieldset>
-
           <fieldset>
-            <legend>SIREN</legend>
-
+            <legend>Siège</legend>
             <div class="f">
-              <label for="n1">SIREN</label>
-              <input id="n1" maxlength="9" data-expected="9" />
-              <template>
-                <p>Attendu : SIREN, 9 chiffres.</p>
-                <pre><code>&lt;input id="n1" maxlength="9"&gt;</code></pre>
-              </template>
+              <label for="s-line1">Adresse</label
+              ><input id="s-line1" data-expected="addressLine1" />
             </div>
-
             <div class="f">
-              <label for="n2">N° SIREN</label>
-              <input id="n2" placeholder="123 456 789" data-expected="9" />
-              <template>
-                <p>Attendu : SIREN. Placeholder en forme de numéro à 9 chiffres.</p>
-                <pre><code>&lt;input id="n2" placeholder="123 456 789"&gt;</code></pre>
-              </template>
+              <label for="s-line2">Complément d'adresse</label
+              ><input id="s-line2" data-expected="addressLine2" />
             </div>
-
             <div class="f">
-              <label for="n3">SIRET / SIREN</label>
-              <input id="n3" maxlength="9" data-expected="9" />
-              <template>
-                <p>
-                  Attendu : SIREN. Le libellé cite les deux, mais seuls 9 caractères tiennent dans
-                  le champ.
-                </p>
-                <pre><code>&lt;input id="n3" maxlength="9"&gt;</code></pre>
-              </template>
+              <label for="s-zip">Code postal</label
+              ><input id="s-zip" maxlength="5" data-expected="postalCode" />
+            </div>
+            <div class="f">
+              <label for="s-city">Ville</label><input id="s-city" data-expected="city" />
+            </div>
+            <div class="f">
+              <label for="s-country">Pays</label>
+              <select id="s-country" data-expected="country">
+                <option value="BE">Belgique</option>
+                <option value="DE">Allemagne</option>
+                <option value="FR">France</option>
+                <option value="CH">Suisse</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="s-phone">Téléphone</label
+              ><input id="s-phone" type="tel" placeholder="01 23 45 67 89" data-expected="phone" />
+            </div>
+            <div class="f">
+              <label for="s-mail">Email</label
+              ><input id="s-mail" type="email" data-expected="email" />
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Dirigeant</legend>
+            <div class="f">
+              <label for="s-title">Civilité</label>
+              <select id="s-title" data-expected="title">
+                <option value="">Choisir</option>
+                <option value="M">Monsieur</option>
+                <option value="MME">Madame</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="s-first">Prénom</label><input id="s-first" data-expected="firstName" />
+            </div>
+            <div class="f">
+              <label for="s-last">Nom</label><input id="s-last" data-expected="lastName" />
+            </div>
+            <div class="f">
+              <label for="s-role">Fonction</label><input id="s-role" data-expected="role" />
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Banque et ERP</legend>
+            <div class="f">
+              <label for="s-iban">IBAN</label
+              ><input
+                id="s-iban"
+                placeholder="FR76 3000 6000 0112 3456 7890 189"
+                data-check="iban"
+                data-expected="iban"
+              /><span class="status"></span>
+            </div>
+            <div class="f">
+              <label for="s-bic">BIC</label><input id="s-bic" data-expected="bic" />
+            </div>
+            <div class="f">
+              <label for="s-gln">GLN</label><input id="s-gln" data-expected="gln" />
+            </div>
+            <div class="f">
+              <label for="s-code">Code société</label
+              ><input id="s-code" data-expected="erpCompanyCode" />
             </div>
           </fieldset>
         </form>
       </section>
 
-      <section class="panel traps">
-        <h2>Pièges <small>aucune entrée ne doit apparaître</small></h2>
-        <div class="grid">
-          <div class="f">
-            <label for="t1">N° TVA intracommunautaire</label>
-            <input id="t1" placeholder="FR12345678901" data-expected="0" />
-            <template>
-              <p>Numéro de TVA : il contient le SIREN mais n'est pas un SIRET.</p>
-              <pre><code>&lt;input id="t1" placeholder="FR12345678901"&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t2">NIC</label>
-            <input id="t2" maxlength="5" data-expected="0" />
-            <template>
-              <p>Le NIC seul : les 5 derniers chiffres du SIRET.</p>
-              <pre><code>&lt;input id="t2" maxlength="5"&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t3">RCS</label>
-            <input id="t3" data-expected="0" />
-            <template>
-              <p>Numéro RCS (registre du commerce), écarté.</p>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t4">Code client</label>
-            <input id="t4" maxlength="14" data-expected="0" />
-            <template>
-              <p>Bonne longueur mais aucun mot-clé : la longueur seule ne suffit jamais.</p>
-              <pre><code>&lt;input id="t4" maxlength="14"&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <span class="caption">Sans aucun indice</span>
-            <input name="reference" data-expected="0" />
-            <template>
-              <p>Rien n'indique ce que le champ attend.</p>
-              <pre><code>&lt;input name="reference"&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t6">SIRET (lecture seule)</label>
-            <input id="t6" value="73282932000074" readonly data-expected="0" />
-            <template>
-              <p>Champ en lecture seule : il ne peut pas être rempli.</p>
-              <pre><code>&lt;input id="t6" readonly&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t7">SIRET (désactivé)</label>
-            <input id="t7" disabled data-expected="0" />
-            <template>
-              <p>Champ désactivé : il ne peut pas être rempli.</p>
-              <pre><code>&lt;input id="t7" disabled&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <label for="t8">SIRET (zone de texte)</label>
-            <textarea id="t8" rows="1" data-expected="0"></textarea>
-            <template>
-              <p>Les zones de texte multilignes ne sont pas prises en charge.</p>
-              <pre><code>&lt;textarea id="t8"&gt;&lt;/textarea&gt;</code></pre>
-            </template>
-          </div>
-
-          <div class="f">
-            <fieldset class="section">
-              <legend>Identification SIRET</legend>
-              <label
-                >Raison sociale
-                <input id="t9" data-expected="0" />
-              </label>
-              <label
-                >Ville
-                <input id="t10" data-expected="0" />
-              </label>
-            </fieldset>
-            <template>
-              <p>
-                Le titre de section concerne plusieurs champs : il n'est pris pour le libellé
-                d'aucun.
-              </p>
-              <pre><code>&lt;fieldset&gt;
-  &lt;legend&gt;Identification SIRET&lt;/legend&gt;
-  ...
-&lt;/fieldset&gt;</code></pre>
-            </template>
-          </div>
-        </div>
+      <!-- 2. Order with billing and shipping blocks -->
+      <section class="panel">
+        <h2>
+          2. Commande <small>facturation et livraison : seul le bloc cliqué est rempli</small>
+        </h2>
+        <form id="order" onsubmit="return false;">
+          <fieldset id="billing" data-expected-block="address">
+            <legend>Facturation</legend>
+            <div class="f">
+              <label for="b-name">Nom</label><input id="b-name" data-expected="lastName" />
+            </div>
+            <div class="f">
+              <label for="b-line1">Adresse</label
+              ><input id="b-line1" data-expected="addressLine1" />
+            </div>
+            <div class="f">
+              <label for="b-zip">Code postal</label><input id="b-zip" data-expected="postalCode" />
+            </div>
+            <div class="f">
+              <label for="b-city">Ville</label><input id="b-city" data-expected="city" />
+            </div>
+          </fieldset>
+          <fieldset id="shipping" data-expected-block="address">
+            <legend>Livraison</legend>
+            <div class="f">
+              <label for="l-name">Nom</label><input id="l-name" data-expected="lastName" />
+            </div>
+            <div class="f">
+              <label for="l-line1">Adresse</label
+              ><input id="l-line1" data-expected="addressLine1" />
+            </div>
+            <div class="f">
+              <label for="l-zip">Code postal</label><input id="l-zip" data-expected="postalCode" />
+            </div>
+            <div class="f">
+              <label for="l-city">Ville</label><input id="l-city" data-expected="city" />
+            </div>
+          </fieldset>
+        </form>
       </section>
 
-      <section class="panel advanced">
-        <h2>Cas avancés <small>l'entrée doit apparaître</small></h2>
-        <div class="grid">
+      <!-- 3. Pure address -->
+      <section class="panel">
+        <h2>3. Adresse seule <small>« Nouvelle adresse et remplir »</small></h2>
+        <form id="address-only" data-expected-block="address" onsubmit="return false;">
           <div class="f">
-            <sff-demo-field mode="open" label="N° SIRET" name="shadowOpen"></sff-demo-field>
-            <template>
-              <p>Attendu : SIRET. Champ dans un shadow DOM ouvert.</p>
-              <pre><code>attachShadow({ mode: 'open' })</code></pre>
-            </template>
+            <label for="a-line1">Adresse</label
+            ><input id="a-line1" autocomplete="address-line1" data-expected="addressLine1" />
           </div>
-
           <div class="f">
-            <sff-demo-field mode="closed" label="SIREN" name="shadowClosed"></sff-demo-field>
-            <template>
-              <p>
-                Attendu : SIREN. Champ dans un shadow DOM fermé, invisible pour les scripts de la
-                page.
-              </p>
-              <pre><code>attachShadow({ mode: 'closed' })</code></pre>
-            </template>
+            <label for="a-line2">Complément</label
+            ><input id="a-line2" autocomplete="address-line2" data-expected="addressLine2" />
           </div>
-
           <div class="f">
-            <iframe src="frame.html" title="Cadre de même origine" class="frame"></iframe>
-            <template>
-              <p>Attendu : SIRET. Champ dans une iframe de même origine.</p>
-              <pre><code>&lt;iframe src="frame.html"&gt;</code></pre>
-            </template>
+            <label for="a-zip">Code postal</label
+            ><input id="a-zip" autocomplete="postal-code" data-expected="postalCode" />
           </div>
-
           <div class="f">
-            <iframe
-              sandbox=""
-              title="Cadre sans origine"
-              class="frame"
-              srcdoc="<!doctype html><meta charset='utf-8'><body style='margin:0;font:14px system-ui,sans-serif'><label for='x' style='display:block;font-weight:600;margin-bottom:4px'>N° SIREN</label><input id='x' style='box-sizing:border-box;width:100%;padding:6px 8px;font:inherit;border:1px solid #c7c9d1;border-radius:6px'></body>"
-            ></iframe>
-            <template>
-              <p>
-                Attendu : SIREN. Iframe en bac à sable : son origine est opaque, donc différente de
-                celle de la page.
-              </p>
-              <pre><code>&lt;iframe sandbox="" srcdoc="..."&gt;</code></pre>
-            </template>
+            <label for="a-city">Ville</label
+            ><input id="a-city" autocomplete="address-level2" data-expected="city" />
           </div>
+          <div class="f">
+            <label for="a-dep">Département</label>
+            <select id="a-dep" data-expected="department">
+              <option value="">Choisir</option>
+              <option value="13">13 - Bouches-du-Rhône</option>
+              <option value="33">33 - Gironde</option>
+              <option value="59">59 - Nord</option>
+              <option value="69">69 - Rhône</option>
+              <option value="75">75 - Paris</option>
+              <option value="92">92 - Hauts-de-Seine</option>
+            </select>
+          </div>
+        </form>
+      </section>
 
-          <div class="f" id="dynamicSlot">
-            <button type="button" id="addField" class="add">Ajouter un champ</button>
-            <template>
-              <p>
-                Attendu : SIRET. Le champ n'existe pas au chargement de la page, il est ajouté au
-                clic.
-              </p>
-            </template>
+      <!-- 4. English form -->
+      <section class="panel">
+        <h2>4. Formulaire en anglais</h2>
+        <form id="english" data-expected-block="company" onsubmit="return false;">
+          <div class="f">
+            <label for="e-company">Company name</label
+            ><input id="e-company" data-expected="legalName" />
           </div>
-        </div>
+          <div class="f">
+            <label for="e-vat">VAT number</label
+            ><input id="e-vat" data-check="vat" data-expected="vat" /><span class="status"></span>
+          </div>
+          <div class="f">
+            <label for="e-street">Street address</label
+            ><input id="e-street" data-expected="addressLine1" />
+          </div>
+          <div class="f">
+            <label for="e-zip">ZIP code</label><input id="e-zip" data-expected="postalCode" />
+          </div>
+          <div class="f">
+            <label for="e-city">City</label><input id="e-city" data-expected="city" />
+          </div>
+          <div class="f">
+            <label for="e-country">Country</label><input id="e-country" data-expected="country" />
+          </div>
+          <div class="f">
+            <label for="e-phone">Phone</label
+            ><input id="e-phone" placeholder="+33 1 23 45 67 89" data-expected="phone" />
+          </div>
+          <div class="f">
+            <label for="e-mail">Contact email</label
+            ><input id="e-mail" data-expected="managerEmail" />
+          </div>
+        </form>
+      </section>
+
+      <!-- 5. Traps -->
+      <section class="panel traps">
+        <h2>5. Pièges <small>aucune entrée de remplissage</small></h2>
+        <form id="newsletter" data-expected-block="none" onsubmit="return false;">
+          <div class="f">
+            <label for="n-mail">Inscription à la lettre d'information</label
+            ><input id="n-mail" type="email" data-expected="email" />
+          </div>
+        </form>
+        <form id="login" data-expected-block="none" onsubmit="return false;">
+          <div class="f">
+            <label for="g-user">Nom d'utilisateur</label><input id="g-user" data-expected="none" />
+          </div>
+          <div class="f">
+            <label for="g-pass">Mot de passe</label
+            ><input id="g-pass" type="password" data-expected="none" />
+          </div>
+        </form>
+        <form id="contact" data-expected-block="none" onsubmit="return false;">
+          <div class="f">
+            <label for="c-name">Nom</label><input id="c-name" data-expected="lastName" />
+          </div>
+          <div class="f">
+            <label for="c-mail">Email</label><input id="c-mail" data-expected="email" />
+          </div>
+          <div class="f">
+            <label for="c-phone">Téléphone</label><input id="c-phone" data-expected="phone" />
+          </div>
+          <div class="f">
+            <label for="c-message">Message</label
+            ><textarea id="c-message" data-expected="none"></textarea>
+          </div>
+        </form>
+      </section>
+
+      <!-- 6. Edge cases -->
+      <section class="panel">
+        <h2>6. Cas limites <small>champs cachés et trop courts</small></h2>
+        <form id="limits" data-expected-block="company" onsubmit="return false;">
+          <div class="f">
+            <label for="x-name">Raison sociale (12 caractères)</label
+            ><input id="x-name" maxlength="12" data-expected="legalName" />
+          </div>
+          <div class="f">
+            <label for="x-siret">SIRET</label><input id="x-siret" data-expected="siret" />
+          </div>
+          <div class="f">
+            <label for="x-iban">IBAN (20 caractères)</label
+            ><input id="x-iban" maxlength="20" data-expected="iban" />
+          </div>
+          <div class="f">
+            <label for="x-city">Ville</label><input id="x-city" data-expected="city" />
+          </div>
+          <div class="f" style="display: none">
+            <label for="x-hidden">Code postal caché</label
+            ><input id="x-hidden" data-expected="postalCode" />
+          </div>
+        </form>
+      </section>
+
+      <!-- 7. Components -->
+      <section class="panel">
+        <h2>7. Composants <small>masque de saisie, shadow DOM, iframe, champ ajouté</small></h2>
+        <form id="components" data-expected-block="company" onsubmit="return false;">
+          <div class="f">
+            <label for="k-siret">SIRET avec masque</label>
+            <p-inputmask id="k-siret" mask="999 999 999 99999"
+              ><input class="masked" data-check="siret" data-expected="siret"
+            /></p-inputmask>
+            <span class="status"></span>
+          </div>
+          <div class="f">
+            <span class="caption">Composant en shadow DOM ouvert</span
+            ><cff-demo-field mode="open" label="Raison sociale"></cff-demo-field>
+          </div>
+          <div class="f">
+            <span class="caption">Composant en shadow DOM fermé</span
+            ><cff-demo-field mode="closed" label="Code postal"></cff-demo-field>
+          </div>
+          <div class="f">
+            <label for="k-city">Ville</label><input id="k-city" data-expected="city" />
+          </div>
+          <div id="dynamic"></div>
+          <button type="button" class="add" id="add-field">Ajouter un champ IBAN</button>
+        </form>
+        <iframe src="frame.html" title="Formulaire dans un cadre" class="frame"></iframe>
       </section>
     </main>
 

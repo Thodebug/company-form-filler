@@ -314,3 +314,28 @@ describe('findBlock', () => {
     assert.equal(blockOf(field('s', 'SIRET'), 's').block, null);
   });
 });
+
+describe('findBlock on the demo page', () => {
+  it('finds the expected block and qualification of every demo form', () => {
+    const { window, get } = loadPage(readProjectFile('site/index.html'), {
+      scripts: ['vocab/fr.js', 'shared/format.js', 'content/detection.js'],
+    });
+    // The demo script defines the shadow DOM components.
+    window.eval(readProjectFile('site/demo.js'));
+    const detection = get('CffDetection');
+    const containers = Array.from(window.document.querySelectorAll('[data-expected-block]'));
+    assert.ok(containers.length >= 8);
+    for (const container of containers) {
+      const expected = container.getAttribute('data-expected-block');
+      const first = /** @type {Element} */ (container.querySelector('[data-expected]'));
+      const block = detection.findBlock(first);
+      const label = `#${container.id}`;
+      if (expected === 'none') {
+        assert.equal(block ? block.qualification : null, null, label);
+      } else {
+        assert.equal(block?.qualification, expected, label);
+        assert.equal(block?.root, container, label);
+      }
+    }
+  });
+});

@@ -1,19 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <title>SIRET Form Filler</title>
+  <title>Company Form Filler</title>
   <rect width="128" height="128" rx="28" fill="#4338CA"/>
-  <rect x="8" y="38" width="112" height="52" rx="12" fill="#fff"/>
-  <rect x="18.00" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="23.80" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="29.60" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="39.60" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="45.40" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="51.20" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="61.20" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="67.00" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="72.80" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="82.80" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="88.60" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="94.40" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="100.20" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
-  <rect x="106.00" y="53" width="4" height="22" rx="1.5" fill="#4338CA"/>
+  <rect x="20" y="16" width="88" height="96" rx="10" fill="#fff"/>
+  <rect x="32" y="30" width="64" height="14" rx="3" fill="#4338CA"/>
+  <rect x="32" y="57" width="64" height="14" rx="3" fill="#4338CA"/>
+  <rect x="32" y="84" width="40" height="14" rx="3" fill="#A5B4FC"/>
 </svg>

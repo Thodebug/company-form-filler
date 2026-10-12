@@ -638,7 +638,7 @@ const CffDetection = (() => {
    * Finds the group of fields the clicked control belongs to.
    *
    * 1. Walks up from the control to the first ancestor holding at least
-   *    three distinct recognized, visible types.
+   *    three distinct recognized, visible types, without leaving its form.
    * 2. Extends to the next ancestors as long as they bring no type already
    *    present (a form split in sections is taken whole; a page with billing
    *    and shipping addresses stops at the clicked one), and stops at a form.
@@ -678,6 +678,10 @@ const CffDetection = (() => {
         block = current;
         controls = found;
         break;
+      }
+      // A form is a boundary: its fields never join another form's.
+      if (current.localName === 'form') {
+        return null;
       }
     }
     if (!block) {

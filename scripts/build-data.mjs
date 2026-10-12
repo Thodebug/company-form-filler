@@ -61,9 +61,9 @@ const PHONE_ZONE_EXCEPTIONS = { 11: '04', 30: '04', 34: '04', 48: '04', 66: '04'
 
 /** Characters the project forbids in text files, with their replacement. */
 const FORBIDDEN_CHARACTERS = [
-  [/—|–/g, '-'],
-  [/·/g, '.'],
-  [/’/g, "'"],
+  [/\u2014|\u2013/g, '-'],
+  [/\u00b7/g, '.'],
+  [/\u2019/g, "'"],
 ];
 
 /**

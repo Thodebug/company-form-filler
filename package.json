@@ -1,14 +1,14 @@
 {
-  "name": "siret-form-filler",
-  "version": "1.0.1",
-  "description": "Extension Firefox et Chromium : génère un SIRET ou un SIREN fictif mais valide dans les champs de formulaire reconnus.",
+  "name": "company-form-filler",
+  "version": "2.0.0",
+  "description": "Extension Firefox et Chromium : remplit les formulaires avec une société ou une adresse française fictive et cohérente.",
   "private": true,
   "license": "MIT",
   "author": "Thodebug",
-  "homepage": "https://github.com/Thodebug/siret-form-filler",
+  "homepage": "https://github.com/Thodebug/company-form-filler",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Thodebug/siret-form-filler.git"
+    "url": "git+https://github.com/Thodebug/company-form-filler.git"
   },
   "type": "module",
   "engines": {
@@ -20,6 +20,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test \"test/*.test.js\"",
     "build": "node scripts/package.mjs",
+    "build:data": "node scripts/build-data.mjs",
     "lint:ext": "web-ext lint --source-dir dist/firefox --warnings-as-errors",
     "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run lint:ext",
     "icons": "node scripts/build-icons.mjs",

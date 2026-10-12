@@ -99,6 +99,7 @@ interface CffExtensionApi {
     lastError?: unknown;
     id?: string;
     getURL(path: string): string;
+    getManifest(): { version: string };
     sendMessage(message: unknown): Promise<any> | undefined;
     onInstalled: CffEvent<(details: { reason: string; previousVersion?: string }) => void>;
     onStartup: CffEvent<() => void>;

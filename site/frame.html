@@ -3,30 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <title>Cadre de démonstration</title>
-    <style>
-      body {
-        margin: 0;
-        font:
-          14px system-ui,
-          sans-serif;
-      }
-      label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 4px;
-      }
-      input {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 6px 8px;
-        font: inherit;
-        border: 1px solid #c7c9d1;
-        border-radius: 6px;
-      }
-    </style>
+    <link rel="stylesheet" href="demo.css" />
   </head>
-  <body>
-    <label for="frameSiret">N° SIRET</label>
-    <input id="frameSiret" name="frameSiret" />
+  <body class="framed">
+    <form onsubmit="return false;">
+      <div class="f"><label for="f-name">Raison sociale</label><input id="f-name" /></div>
+      <div class="f"><label for="f-siren">SIREN</label><input id="f-siren" maxlength="11" /></div>
+      <div class="f"><label for="f-city">Ville</label><input id="f-city" /></div>
+    </form>
   </body>
 </html>
